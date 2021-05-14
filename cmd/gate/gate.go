@@ -1,4 +1,4 @@
-package gate
+package main
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/name5566/leaf/network"
 )
 
-func New(host string, port int) *Gate {
+func NewGate(host string, port int) *Gate {
 	addr := fmt.Sprintf("%s:%d", host, port)
 	gate := &Gate{
 		Processor:    registerMsg(),

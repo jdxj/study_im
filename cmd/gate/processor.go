@@ -1,4 +1,4 @@
-package gate
+package main
 
 import (
 	"github.com/jdxj/study_im/proto"

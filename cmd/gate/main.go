@@ -8,7 +8,6 @@ import (
 	"github.com/micro/cli/v2"
 
 	"github.com/jdxj/study_im/config"
-	"github.com/jdxj/study_im/gate"
 	"github.com/jdxj/study_im/logger"
 )
 
@@ -18,7 +17,7 @@ const (
 
 var (
 	conf       *config.Config
-	gateServer *gate.Gate
+	gateServer *Gate
 )
 
 func main() {
@@ -37,7 +36,7 @@ func main() {
 		// gate server
 		micro.BeforeStart(func() error {
 			gateCfg := conf.Gate
-			gateServer = gate.New(gateCfg.Host, gateCfg.Port)
+			gateServer = NewGate(gateCfg.Host, gateCfg.Port)
 			gateServer.Run()
 			return nil
 		}),

@@ -1,9 +1,8 @@
-package gate
+package main
 
 import (
-	"reflect"
-
 	"net"
+	"reflect"
 
 	"github.com/name5566/leaf/log"
 	"github.com/name5566/leaf/network"
