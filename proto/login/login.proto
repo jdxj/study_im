@@ -1,0 +1,9 @@
+syntax = "proto3";
+package login;
+
+// 其他包导入时使用
+option go_package = "github.com/jdxj/study_im/proto/login";
+
+message LoginInfo {
+  uint32 user_id = 1;
+}
