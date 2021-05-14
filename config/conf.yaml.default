@@ -1,0 +1,9 @@
+logger:
+  file_name: ""
+  app_name: ""
+  max_size: 0
+  max_age: 0
+  max_backups: 0
+  level: 0
+  local_time: false
+  compress: false

@@ -1,0 +1,9 @@
+logger:
+  file_name: "./test.log"
+  app_name: "test"
+  max_size: 128
+  max_age: 30
+  max_backups: 30
+  level: -1
+  local_time: true
+  compress: false
