@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"bufio"
@@ -10,7 +10,7 @@ import (
 	"github.com/name5566/leaf/network"
 )
 
-func New() *Client {
+func NewClient() *Client {
 	c := &Client{
 		Processor:   registerMsg(),
 		TCPAddr:     "127.0.0.1:9000",
