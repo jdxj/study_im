@@ -1,6 +1,6 @@
 logger:
-  file_name: "./test.log"
-  app_name: "test"
+  file_name: "./log/gate.log"
+  app_name: "gate"
   max_size: 128
   max_age: 30
   max_backups: 30

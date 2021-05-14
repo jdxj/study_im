@@ -7,3 +7,6 @@ logger:
   level: 0
   local_time: false
   compress: false
+gate:
+  host: ""
+  port: 0

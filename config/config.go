@@ -21,8 +21,8 @@ func PrintConfigFormat() ([]byte, error) {
 	return data, err
 }
 
-func New(path string) (Config, error) {
-	conf := Config{}
+func New(path string) (*Config, error) {
+	conf := &Config{}
 	file, err := os.Open(path)
 	if err != nil {
 		return conf, err
@@ -30,11 +30,12 @@ func New(path string) (Config, error) {
 	defer file.Close()
 
 	decoder := yaml.NewDecoder(file)
-	return conf, decoder.Decode(&conf)
+	return conf, decoder.Decode(conf)
 }
 
 type Config struct {
 	Logger Logger `yaml:"logger"`
+	Gate   Gate   `yaml:"gate"`
 }
 
 type Logger struct {
@@ -46,4 +47,9 @@ type Logger struct {
 	Level      int    `yaml:"level"`
 	LocalTime  bool   `yaml:"local_time"`
 	Compress   bool   `yaml:"compress"`
+}
+
+type Gate struct {
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
 }

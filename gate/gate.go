@@ -1,18 +1,18 @@
 package gate
 
 import (
+	"fmt"
+
 	"github.com/name5566/leaf/network"
 )
 
-func New() *Gate {
+func New(host string, port int) *Gate {
+	addr := fmt.Sprintf("%s:%d", host, port)
 	gate := &Gate{
-		MaxConnNum:      0,
-		PendingWriteNum: 0,
-		MaxMsgLen:       0,
-		Processor:       registerMsg(),
-		TCPAddr:         ":9000",
-		LenMsgLen:       4,
-		LittleEndian:    false,
+		Processor:    registerMsg(),
+		TCPAddr:      addr,
+		LenMsgLen:    4,
+		LittleEndian: false,
 	}
 	return gate
 }
@@ -25,33 +25,27 @@ type Gate struct {
 
 	// tcp
 	TCPAddr      string
+	tcpServer    *network.TCPServer
 	LenMsgLen    int
 	LittleEndian bool
 }
 
-func (gate *Gate) Run(closeSig chan bool) {
-	var tcpServer *network.TCPServer
-	if gate.TCPAddr != "" {
-		tcpServer = new(network.TCPServer)
-		tcpServer.Addr = gate.TCPAddr
-		tcpServer.MaxConnNum = gate.MaxConnNum
-		tcpServer.PendingWriteNum = gate.PendingWriteNum
-		tcpServer.LenMsgLen = gate.LenMsgLen
-		tcpServer.MaxMsgLen = gate.MaxMsgLen
-		tcpServer.LittleEndian = gate.LittleEndian
-		tcpServer.NewAgent = func(conn *network.TCPConn) network.Agent {
-			a := &agent{conn: conn, gate: gate}
-			return a
-		}
+func (gate *Gate) Run() {
+	tcpServer := new(network.TCPServer)
+	tcpServer.Addr = gate.TCPAddr
+	tcpServer.MaxConnNum = gate.MaxConnNum
+	tcpServer.PendingWriteNum = gate.PendingWriteNum
+	tcpServer.LenMsgLen = gate.LenMsgLen
+	tcpServer.MaxMsgLen = gate.MaxMsgLen
+	tcpServer.LittleEndian = gate.LittleEndian
+	tcpServer.NewAgent = func(conn *network.TCPConn) network.Agent {
+		a := &agent{conn: conn, gate: gate}
+		return a
 	}
+	gate.tcpServer = tcpServer
+	tcpServer.Start()
+}
 
-	if tcpServer != nil {
-		tcpServer.Start()
-	}
-
-	<-closeSig
-
-	if tcpServer != nil {
-		tcpServer.Close()
-	}
+func (gate *Gate) Stop() {
+	gate.tcpServer.Close()
 }
