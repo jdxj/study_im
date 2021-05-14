@@ -1,2 +1,3 @@
-# study_im
-study im
+# 介绍
+
+study_im 是一个练手项目.
