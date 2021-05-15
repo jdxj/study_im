@@ -13,6 +13,7 @@ type MyCodec struct {
 	num int
 }
 
+// len | data
 func (mc *MyCodec) Encode(c gnet.Conn, buf []byte) ([]byte, error) {
 	length := len(buf)
 
@@ -29,15 +30,13 @@ func (mc *MyCodec) Decode(c gnet.Conn) ([]byte, error) {
 	if size != 4 {
 		return nil, fmt.Errorf("abc")
 	}
-	c.ShiftN(size)
 
 	length := binary.BigEndian.Uint32(buf)
-	size, buf = c.ReadN(int(length))
-	if size != int(length) {
+	size, buf = c.ReadN(4 + int(length))
+	if size != 4+int(length) {
 		return nil, fmt.Errorf("data len not enough")
 	}
 	c.ShiftN(size)
-
 	return buf, nil
 }
 
