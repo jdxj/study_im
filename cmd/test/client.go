@@ -1,10 +1,10 @@
 package main
 
 import (
+	"encoding/binary"
+	"io"
 	"log"
 	"net"
-	"strconv"
-	"time"
 )
 
 type client struct {
@@ -18,17 +18,33 @@ func (c *client) Connect() {
 	}
 	defer conn.Close()
 
-	c.conn = conn
-	go c.read()
-
-	for i := 0; i < 100; i++ {
-		time.Sleep(time.Second)
-		data := strconv.Itoa(i) + "\n"
-		_, err := conn.Write([]byte(data))
-		if err != nil {
-			log.Fatalln(conn)
-		}
+	// write "hello" to server
+	content := []byte("hello")
+	length := len(content)
+	data := make([]byte, 4+length)
+	binary.BigEndian.PutUint32(data, uint32(length))
+	copy(data[4:], content)
+	_, err = conn.Write(data)
+	if err != nil {
+		log.Fatalln(err)
 	}
+
+	// read response from server
+	data = data[:4]
+	n, err := io.ReadFull(conn, data)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Printf("read length1: %d\n", n)
+
+	length = int(binary.BigEndian.Uint32(data))
+	data = make([]byte, length)
+	n, err = io.ReadFull(conn, data)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Printf("read length2: %d\n", n)
+	log.Printf("result: %s\n", data)
 }
 
 func (c *client) read() {
