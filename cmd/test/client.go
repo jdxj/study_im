@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
 type client struct {
@@ -45,6 +46,7 @@ func (c *client) Connect() {
 	}
 	log.Printf("read length2: %d\n", n)
 	log.Printf("result: %s\n", data)
+	time.Sleep(time.Minute)
 }
 
 func (c *client) read() {

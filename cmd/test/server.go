@@ -64,6 +64,7 @@ type echoServer struct {
 }
 
 func (es *echoServer) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Action) {
+	fmt.Printf("es pointer: %p\n", es)
 	fmt.Printf("receive: %s\n", frame)
 	res := fmt.Sprintf("%s %s", frame, "world")
 	out = []byte(res)
