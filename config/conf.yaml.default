@@ -10,3 +10,7 @@ logger:
 gate:
   host: ""
   port: 0
+web:
+  host: ""
+  port: 0
+  mode: ""

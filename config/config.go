@@ -6,6 +6,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// PrintConfigFormat 用于生成格式化的配置文件.
+// 如果有新配置被添加, 可以使用该函数自动生成 yaml
+// 文件来防止手写 yaml 带来的错误.
 func PrintConfigFormat() ([]byte, error) {
 	data, _ := yaml.Marshal(Config{})
 
@@ -36,6 +39,7 @@ func New(path string) (*Config, error) {
 type Config struct {
 	Logger Logger `yaml:"logger"`
 	Gate   Gate   `yaml:"gate"`
+	Web    Web    `yaml:"web"`
 }
 
 type Logger struct {
@@ -52,4 +56,10 @@ type Logger struct {
 type Gate struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
+}
+
+type Web struct {
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
+	Mode string `yaml:"mode"`
 }
