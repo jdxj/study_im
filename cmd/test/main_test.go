@@ -58,3 +58,16 @@ func TestByteOrderAPI2(t *testing.T) {
 	binary.BigEndian.PutUint32(buf, num)
 	fmt.Printf("%v\n", buf)
 }
+
+type A struct {
+	Name string
+}
+
+func (a *A) String() string {
+	return "abc"
+}
+
+func TestAString(t *testing.T) {
+	var a *A
+	a.String()
+}

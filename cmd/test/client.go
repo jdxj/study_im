@@ -7,8 +7,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/jdxj/study_im/codec/protobuf"
 	"github.com/jdxj/study_im/proto/head"
-	"github.com/jdxj/study_im/proto/protobuf"
 )
 
 type client struct {

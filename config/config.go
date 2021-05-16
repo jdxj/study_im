@@ -60,6 +60,7 @@ type Logger struct {
 type Gate struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
+	Node int    `yaml:"node"`
 }
 
 type Web struct {

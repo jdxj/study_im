@@ -1,5 +1,7 @@
 package protobuf
 
+import "github.com/jdxj/study_im/proto/head"
+
 var (
 	p *Processor
 )
@@ -7,7 +9,6 @@ var (
 func init() {
 	p = NewProcessor()
 
-	// todo: 注册协议
 	registerMsg(p)
 }
 
@@ -19,6 +20,10 @@ func Unmarshal(data []byte) (uint16, interface{}, error) {
 	return p.Unmarshal(data)
 }
 
-func registerMsg(p *Processor) {
+const (
+	HEAD = iota
+)
 
+func registerMsg(p *Processor) {
+	p.Register(HEAD, &head.Head{})
 }

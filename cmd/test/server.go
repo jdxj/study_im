@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/jdxj/study_im/codec/protobuf"
 	"github.com/jdxj/study_im/proto/head"
-	"github.com/jdxj/study_im/proto/protobuf"
 
 	"github.com/panjf2000/gnet"
 )
@@ -17,6 +17,7 @@ type MyCodec struct {
 }
 
 // len | data
+
 func (mc *MyCodec) Encode(c gnet.Conn, buf []byte) ([]byte, error) {
 	length := len(buf)
 
@@ -73,6 +74,7 @@ func StartServer() {
 	echo := new(echoServer)
 	echo.p = protobuf.NewProcessor()
 	echo.p.Register(0, &head.Head{})
+	echo.EventServer.React(nil, nil)
 
 	err := gnet.Serve(echo, "tcp://:9000",
 		gnet.WithMulticore(true),

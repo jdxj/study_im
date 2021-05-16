@@ -1,16 +1,16 @@
 logger:
-  file_name: ""
-  app_name: ""
-  max_size: 0
-  max_age: 0
-  max_backups: 0
-  level: 0
-  local_time: false
+  file_name: "./log/gate.log"
+  app_name: "gate"
+  max_size: 128
+  max_age: 30
+  max_backups: 30
+  level: -1
+  local_time: true
   compress: false
 gate:
-  host: ""
-  port: 0
-  node: 0
+  host: "0.0.0.0"
+  port: 9000
+  node: 1
 web:
   host: ""
   port: 0
