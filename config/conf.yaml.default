@@ -30,3 +30,8 @@ redis:
   pass: ""
   host: ""
   port: 0
+rabbit:
+  user: ""
+  pass: ""
+  host: ""
+  port: 0

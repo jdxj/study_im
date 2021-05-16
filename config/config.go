@@ -43,6 +43,7 @@ type Config struct {
 	MySQL  MySQL  `yaml:"mysql"`
 	Mongo  Mongo  `yaml:"mongo"`
 	Redis  Redis  `yaml:"redis"`
+	Rabbit Rabbit `yaml:"rabbit"`
 }
 
 type Logger struct {
@@ -88,4 +89,11 @@ type Redis struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 	db   int    `yaml:"db"`
+}
+
+type Rabbit struct {
+	User string `yaml:"user"`
+	Pass string `yaml:"pass"`
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
 }

@@ -16,6 +16,7 @@ require (
 	github.com/micro/cli/v2 v2.1.2
 	github.com/name5566/leaf v0.0.0-20200516012428-8592b1abbbbe
 	github.com/panjf2000/gnet v1.4.3
+	github.com/streadway/amqp v1.0.0
 	github.com/ugorji/go v1.2.6 // indirect
 	github.com/valyala/bytebufferpool v1.0.0
 	go.mongodb.org/mongo-driver v1.5.2
