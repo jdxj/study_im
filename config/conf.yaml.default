@@ -14,3 +14,8 @@ web:
   host: ""
   port: 0
   mode: ""
+my_sql:
+  host: ""
+  port: 0
+  user: ""
+  pass: ""

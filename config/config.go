@@ -40,6 +40,7 @@ type Config struct {
 	Logger Logger `yaml:"logger"`
 	Gate   Gate   `yaml:"gate"`
 	Web    Web    `yaml:"web"`
+	MySQL  MySQL  `yaml:"my_sql"`
 }
 
 type Logger struct {
@@ -62,4 +63,12 @@ type Web struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 	Mode string `yaml:"mode"`
+}
+
+type MySQL struct {
+	User   string `yaml:"user"`
+	Pass   string `yaml:"pass"`
+	Dbname string `yaml:"dbname"`
+	Host   string `yaml:"host"`
+	Port   int    `yaml:"port"`
 }
