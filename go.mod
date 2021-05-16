@@ -17,6 +17,7 @@ require (
 	github.com/panjf2000/gnet v1.4.3
 	github.com/ugorji/go v1.2.6 // indirect
 	github.com/valyala/bytebufferpool v1.0.0
+	go.mongodb.org/mongo-driver v1.5.2
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect

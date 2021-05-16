@@ -14,8 +14,15 @@ web:
   host: ""
   port: 0
   mode: ""
-my_sql:
-  host: ""
-  port: 0
+mysql:
   user: ""
   pass: ""
+  dbname: ""
+  host: ""
+  port: 0
+mongo:
+  user: ""
+  pass: ""
+  dbname: ""
+  host: ""
+  port: 0
