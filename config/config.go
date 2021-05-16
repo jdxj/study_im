@@ -42,6 +42,7 @@ type Config struct {
 	Web    Web    `yaml:"web"`
 	MySQL  MySQL  `yaml:"mysql"`
 	Mongo  Mongo  `yaml:"mongo"`
+	Redis  Redis  `yaml:"redis"`
 }
 
 type Logger struct {
@@ -80,4 +81,11 @@ type Mongo struct {
 	Dbname string `yaml:"dbname"`
 	Host   string `yaml:"host"`
 	Port   int    `yaml:"port"`
+}
+
+type Redis struct {
+	Pass string `yaml:"pass"`
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
+	db   int    `yaml:"db"`
 }
