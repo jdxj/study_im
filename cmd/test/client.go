@@ -6,6 +6,9 @@ import (
 	"log"
 	"net"
 	"time"
+
+	"github.com/jdxj/study_im/proto/head"
+	"github.com/jdxj/study_im/proto/protobuf"
 )
 
 type client struct {
@@ -19,33 +22,45 @@ func (c *client) Connect() {
 	}
 	defer conn.Close()
 
-	// write "hello" to server
-	content := []byte("hello")
-	length := len(content)
-	data := make([]byte, 4+length)
-	binary.BigEndian.PutUint32(data, uint32(length))
-	copy(data[4:], content)
+	p := protobuf.NewProcessor()
+	p.Register(0, &head.Head{})
+
+	head := &head.Head{
+		Version:   1,
+		Seq:       0,
+		Timestamp: time.Now().Unix(),
+	}
+	data, err := p.Marshal(head)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	mc := &MyCodec{}
+	data, _ = mc.Encode(nil, data)
 	_, err = conn.Write(data)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	// read response from server
-	data = data[:4]
-	n, err := io.ReadFull(conn, data)
+	lenBuf := make([]byte, 4)
+	_, err = io.ReadFull(conn, lenBuf)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Printf("read length1: %d\n", n)
 
-	length = int(binary.BigEndian.Uint32(data))
-	data = make([]byte, length)
-	n, err = io.ReadFull(conn, data)
+	length := binary.BigEndian.Uint32(lenBuf)
+	frameBuf := make([]byte, length)
+	_, err = io.ReadFull(conn, frameBuf)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Printf("read length2: %d\n", n)
-	log.Printf("result: %s\n", data)
+
+	_, msg, err := p.Unmarshal(frameBuf)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Printf("resp: %s\n", msg)
+
 	time.Sleep(time.Minute)
 }
 

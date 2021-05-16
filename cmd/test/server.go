@@ -6,6 +6,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/jdxj/study_im/proto/head"
+	"github.com/jdxj/study_im/proto/protobuf"
+
 	"github.com/panjf2000/gnet"
 )
 
@@ -37,41 +40,40 @@ func (mc *MyCodec) Decode(c gnet.Conn) ([]byte, error) {
 		return nil, fmt.Errorf("data len not enough")
 	}
 	c.ShiftN(size)
-	return buf, nil
-}
 
-func readN(c gnet.Conn, size int) []byte {
-	fmt.Printf("want to read: %d\n", size)
-	left := size
-	n := 0
-	var buf []byte
-	data := make([]byte, 0, size)
-
-	for ; left > 0; left -= n {
-		n, buf = c.ReadN(left)
-		fmt.Printf("read: %d\n", n)
-		time.Sleep(2 * time.Second)
-		c.ShiftN(n)
-		data = append(data, buf...)
-
-	}
-	return data
+	// todo: 不知道是否有 GC 问题
+	return buf[4:], nil
 }
 
 type echoServer struct {
 	*gnet.EventServer
+	p *protobuf.Processor
 }
 
 func (es *echoServer) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Action) {
 	fmt.Printf("es pointer: %p\n", es)
 	fmt.Printf("receive: %s\n", frame)
-	res := fmt.Sprintf("%s %s", frame, "world")
-	out = []byte(res)
-	return
+	_, msg, err := es.p.Unmarshal(frame)
+	if err != nil {
+		fmt.Printf("Unmarshal: %s\n", err)
+		return nil, 0
+	}
+
+	head := msg.(*head.Head)
+	head.Seq++
+	data, err := es.p.Marshal(head)
+	if err != nil {
+		fmt.Printf("Marshal: %s\n", err)
+		return nil, 0
+	}
+	return data, 0
 }
 
 func StartServer() {
 	echo := new(echoServer)
+	echo.p = protobuf.NewProcessor()
+	echo.p.Register(0, &head.Head{})
+
 	err := gnet.Serve(echo, "tcp://:9000",
 		gnet.WithMulticore(true),
 		gnet.WithCodec(&MyCodec{}))
