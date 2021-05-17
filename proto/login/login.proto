@@ -2,8 +2,41 @@ syntax = "proto3";
 package login;
 
 // 其他包导入时使用
-option go_package = "github.com/jdxj/study_im/proto/login";
+// option go_package = "github.com/jdxj/study_im/proto/login";
 
-message LoginInfo {
-  uint32 user_id = 1;
+// 认证
+
+message AuthRequest {
+  string token = 1;
+  uint32 uid   = 2;
+}
+
+message AuthResponse {
+  int32 status   = 1;
+  string err_msg = 2;
+}
+
+// 登出
+
+message LogoutRequest {
+  string token = 1;
+  uint32 uid   = 2;
+}
+
+message LogoutResponse {
+
+}
+
+// 踢人
+
+enum Reason {
+  OTHER_LOGIN = 0;
+}
+
+message KickOutRequest {
+  Reason reason = 1;
+}
+
+message KickOutResponse {
+
 }

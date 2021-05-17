@@ -1,0 +1,72 @@
+syntax = "proto3";
+package chat;
+
+// Content 目前使用最简单的字符串, 以后可以扩展
+message Message {
+  string text = 1;
+}
+
+// 单对单消息
+
+message C2CSendRequest {
+  uint32 from = 1;
+  uint32 to   = 2;
+  Message msg = 3;
+}
+
+message C2CSendResponse {
+  uint64 msg_id = 1;
+}
+
+message C2CPushRequest {
+  uint32 from   = 1;
+  Message msg   = 2;
+  uint64 msg_id = 3;
+}
+
+message C2CPushResponse {
+  uint64 msg_id = 1;
+}
+
+// 群聊
+
+message C2GSendRequest {
+  uint32 from  = 1;
+  uint32 group = 2;
+  Message msg  = 3;
+}
+
+message C2GSendResponse {
+  uint64 msg_id = 1;
+}
+
+message C2GPushRequest {
+  uint32 from   = 1;
+  uint32 group  = 2;
+  Message msg   = 3;
+  uint64 msg_id = 4;
+}
+
+message C2GPushResponse {
+  uint64 msg_id = 1;
+}
+
+// 拉离线消息
+
+message C2SPullMsgRequest {
+  uint32 uid    = 1;
+  uint64 msg_id = 2;
+  uint32 limit  = 3;
+}
+
+message PullMsg {
+  uint32 from     = 1;
+  uint32 group    = 2;
+  Message msg     = 3;
+  uint64 msg_id   = 4;
+  int64 send_time = 5;
+}
+
+message C2SPullMsgResponse {
+  repeated PullMsg msg = 1;
+}

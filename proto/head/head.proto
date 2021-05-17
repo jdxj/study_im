@@ -2,9 +2,15 @@ syntax = "proto3";
 package head;
 
 // 其他包导入时使用
-option go_package = "github.com/jdxj/study_im/proto/head";
+// option go_package = "github.com/jdxj/study_im/proto/head";
 
 message Head {
+  uint32 version  = 1;
+  uint32 seq      = 2;
+  int64 timestamp = 3;
+}
+
+message Heartbeat {
   uint32 version  = 1;
   uint32 seq      = 2;
   int64 timestamp = 3;
