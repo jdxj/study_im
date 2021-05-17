@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/asim/go-micro/v3 v3.5.1
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/gin-gonic/gin v1.7.1
 	github.com/go-playground/validator/v10 v10.6.1 // indirect
 	github.com/go-redis/redis/v8 v8.8.2

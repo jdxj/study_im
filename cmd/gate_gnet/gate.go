@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"sync"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/panjf2000/gnet"
 
 	"github.com/jdxj/study_im/codec/frame"
@@ -12,12 +12,21 @@ import (
 	"github.com/jdxj/study_im/logger"
 )
 
-func NewGate(host string, port int) *Gate {
+func NewGate(host string, port, nodeID int) (*Gate, error) {
 	gate := &Gate{
-		host: host,
-		port: port,
+		host:   host,
+		port:   port,
+		nodeID: int64(nodeID),
 	}
-	return gate
+
+	gate.am = &AgentManager{
+		mutex:  &sync.RWMutex{},
+		agents: make(map[int64]gnet.Conn),
+	}
+
+	var err error
+	gate.idGenerator, err = snowflake.NewNode(int64(nodeID))
+	return gate, err
 }
 
 type Gate struct {
@@ -25,13 +34,14 @@ type Gate struct {
 	host string
 	port int
 
-	// todo: id 生成器
-	idGen  int
-	idConn *sync.Map
+	nodeID      int64
+	idGenerator *snowflake.Node
+
+	am *AgentManager
 }
 
 func (gate *Gate) Serve() error {
-	log.Printf("server started\n")
+	logger.Infof("server started")
 	addr := fmt.Sprintf("%s:%d", gate.host, gate.port)
 	return gnet.Serve(gate, addr,
 		gnet.WithMulticore(true),
@@ -39,18 +49,27 @@ func (gate *Gate) Serve() error {
 	)
 }
 
-func (gate *Gate) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Action) {
+func (gate *Gate) React(frame []byte, conn gnet.Conn) (out []byte, action gnet.Action) {
 	_, msg, err := protobuf.Unmarshal(frame)
 	if err != nil {
 		logger.Errorf("Unmarshal: %s", err)
 		return nil, 0
 	}
 
-	agent := &Agent{
-		nodeID: 0, // todo: 初始化
-		userID: gate.idGen,
-		conn:   c,
-	}
-	out = handle(agent, msg)
+	out = gate.handle(conn, msg)
 	return
+}
+
+func (gate *Gate) OnClosed(conn gnet.Conn, err error) (action gnet.Action) {
+	agentID, ok := conn.Context().(int64)
+	if !ok {
+		return
+	}
+	gate.am.DelAgent(agentID)
+	logger.Debugf("del agent: %d", agentID)
+	return
+}
+
+func (gate *Gate) nextID() int64 {
+	return gate.idGenerator.Generate().Int64()
 }

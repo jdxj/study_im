@@ -21,7 +21,11 @@ func main() {
 	)
 
 	gateCfg := conf.Gate
-	gate := NewGate(gateCfg.Host, gateCfg.Port)
+	gate, err := NewGate(gateCfg.Host, gateCfg.Port, gateCfg.Node)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	err = gate.Serve()
 	if err != nil {
 		log.Fatalln(err)
