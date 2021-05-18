@@ -23,6 +23,7 @@ func NewGate(host string, port, nodeID int) (*Gate, error) {
 		mutex:  &sync.RWMutex{},
 		agents: make(map[int64]gnet.Conn),
 	}
+	gate.sm = &SeqManager{}
 
 	var err error
 	gate.idGenerator, err = snowflake.NewNode(int64(nodeID))
@@ -38,6 +39,7 @@ type Gate struct {
 	idGenerator *snowflake.Node
 
 	am *AgentManager
+	sm *SeqManager // todo: seq 由发送队列管理
 }
 
 func (gate *Gate) Serve() error {
@@ -50,13 +52,13 @@ func (gate *Gate) Serve() error {
 }
 
 func (gate *Gate) React(frame []byte, conn gnet.Conn) (out []byte, action gnet.Action) {
-	_, msg, err := protobuf.Unmarshal(frame)
+	rawMsg, err := protobuf.Unmarshal(frame)
 	if err != nil {
 		logger.Errorf("Unmarshal: %s", err)
 		return nil, 0
 	}
 
-	out = gate.handle(conn, msg)
+	out = gate.handle(conn, rawMsg)
 	return
 }
 

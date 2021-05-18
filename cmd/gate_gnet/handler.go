@@ -1,7 +1,7 @@
 package main
 
 import (
-	"time"
+	"github.com/jdxj/study_im/proto/chat"
 
 	"github.com/panjf2000/gnet"
 
@@ -11,14 +11,14 @@ import (
 	"github.com/jdxj/study_im/proto/login"
 )
 
-func (gate *Gate) handle(conn gnet.Conn, msg interface{}) []byte {
+func (gate *Gate) handle(conn gnet.Conn, rawMsg *protobuf.RawMsg) []byte {
 	var data []byte
 	var err error
-	switch v := msg.(type) {
-	case *head.Heartbeat:
-		data, err = gate.handleHeartbeat(conn, v)
-	case *login.AuthRequest:
-		data, err = gate.handleAuthRequest(conn, v)
+	switch rawMsg.Cmd {
+	case protobuf.Heartbeat:
+		data, err = gate.handleHeartbeat(conn, rawMsg)
+	case protobuf.AuthRequest:
+		data, err = gate.handleAuthRequest(conn, rawMsg)
 	}
 
 	if err != nil {
@@ -27,18 +27,13 @@ func (gate *Gate) handle(conn gnet.Conn, msg interface{}) []byte {
 	return data
 }
 
-func (gate *Gate) handleHeartbeat(conn gnet.Conn, h *head.Heartbeat) ([]byte, error) {
-	logger.Debugf("req: %s", h)
-	if conn.Context() == nil {
-		return nil, nil
-	}
-
-	h.Seq += 1
-	h.Timestamp = time.Now().Unix()
-	return protobuf.Marshal(h)
+func (gate *Gate) handleHeartbeat(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
+	logger.Debugf("%v", *rawMsg)
+	return protobuf.Marshal(gate.sm.NextSeq(), &head.Heartbeat{})
 }
 
-func (gate *Gate) handleAuthRequest(conn gnet.Conn, req *login.AuthRequest) ([]byte, error) {
+func (gate *Gate) handleAuthRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
+	req := rawMsg.Msg.(*login.AuthRequest)
 	logger.Debugf("req: %s", req)
 	if conn.Context() != nil {
 		return nil, nil
@@ -54,5 +49,13 @@ func (gate *Gate) handleAuthRequest(conn gnet.Conn, req *login.AuthRequest) ([]b
 		Status: 1,
 		ErrMsg: "ok",
 	}
-	return protobuf.Marshal(resp)
+	return protobuf.Marshal(gate.sm.NextSeq(), resp)
+}
+
+func (gate *Gate) handleC2CSendRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
+	req := rawMsg.Msg.(*chat.C2CSendRequest)
+	logger.Debugf("req: %s", req)
+
+	resp := &chat.C2CSendResponse{MsgId: 888}
+	return protobuf.Marshal(gate.sm.NextSeq(), resp)
 }

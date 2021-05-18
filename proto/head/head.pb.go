@@ -25,83 +25,17 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
-type Head struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Version   uint32 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
-	Seq       uint32 `protobuf:"varint,2,opt,name=seq,proto3" json:"seq,omitempty"`
-	Timestamp int64  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-}
-
-func (x *Head) Reset() {
-	*x = Head{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_head_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Head) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Head) ProtoMessage() {}
-
-func (x *Head) ProtoReflect() protoreflect.Message {
-	mi := &file_head_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Head.ProtoReflect.Descriptor instead.
-func (*Head) Descriptor() ([]byte, []int) {
-	return file_head_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *Head) GetVersion() uint32 {
-	if x != nil {
-		return x.Version
-	}
-	return 0
-}
-
-func (x *Head) GetSeq() uint32 {
-	if x != nil {
-		return x.Seq
-	}
-	return 0
-}
-
-func (x *Head) GetTimestamp() int64 {
-	if x != nil {
-		return x.Timestamp
-	}
-	return 0
-}
-
+// Heartbeat 是空包
 type Heartbeat struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Version   uint32 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
-	Seq       uint32 `protobuf:"varint,2,opt,name=seq,proto3" json:"seq,omitempty"`
-	Timestamp int64  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *Heartbeat) Reset() {
 	*x = Heartbeat{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_head_proto_msgTypes[1]
+		mi := &file_head_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -114,7 +48,7 @@ func (x *Heartbeat) String() string {
 func (*Heartbeat) ProtoMessage() {}
 
 func (x *Heartbeat) ProtoReflect() protoreflect.Message {
-	mi := &file_head_proto_msgTypes[1]
+	mi := &file_head_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -127,46 +61,15 @@ func (x *Heartbeat) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Heartbeat.ProtoReflect.Descriptor instead.
 func (*Heartbeat) Descriptor() ([]byte, []int) {
-	return file_head_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *Heartbeat) GetVersion() uint32 {
-	if x != nil {
-		return x.Version
-	}
-	return 0
-}
-
-func (x *Heartbeat) GetSeq() uint32 {
-	if x != nil {
-		return x.Seq
-	}
-	return 0
-}
-
-func (x *Heartbeat) GetTimestamp() int64 {
-	if x != nil {
-		return x.Timestamp
-	}
-	return 0
+	return file_head_proto_rawDescGZIP(), []int{0}
 }
 
 var File_head_proto protoreflect.FileDescriptor
 
 var file_head_proto_rawDesc = []byte{
 	0x0a, 0x0a, 0x68, 0x65, 0x61, 0x64, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x04, 0x68, 0x65,
-	0x61, 0x64, 0x22, 0x50, 0x0a, 0x04, 0x48, 0x65, 0x61, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65,
-	0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x76, 0x65, 0x72,
-	0x73, 0x69, 0x6f, 0x6e, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x65, 0x71, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x0d, 0x52, 0x03, 0x73, 0x65, 0x71, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
-	0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
-	0x74, 0x61, 0x6d, 0x70, 0x22, 0x55, 0x0a, 0x09, 0x48, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61,
-	0x74, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0d, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x10, 0x0a, 0x03, 0x73,
-	0x65, 0x71, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x73, 0x65, 0x71, 0x12, 0x1c, 0x0a,
-	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x61, 0x64, 0x22, 0x0b, 0x0a, 0x09, 0x48, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61, 0x74, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -181,10 +84,9 @@ func file_head_proto_rawDescGZIP() []byte {
 	return file_head_proto_rawDescData
 }
 
-var file_head_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_head_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_head_proto_goTypes = []interface{}{
-	(*Head)(nil),      // 0: head.Head
-	(*Heartbeat)(nil), // 1: head.Heartbeat
+	(*Heartbeat)(nil), // 0: head.Heartbeat
 }
 var file_head_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -201,18 +103,6 @@ func file_head_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_head_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Head); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_head_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Heartbeat); i {
 			case 0:
 				return &v.state
@@ -231,7 +121,7 @@ func file_head_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_head_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

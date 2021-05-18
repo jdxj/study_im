@@ -20,7 +20,15 @@ var (
 	}
 
 	commands = make(map[string]Parser)
+
+	seq uint32
 )
+
+func nextSeq() uint32 {
+	s := seq
+	seq++
+	return s
+}
 
 func init() {
 	commands[List] = NewListCmd()
@@ -58,7 +66,8 @@ func (ac *AuthCmd) Parse(args []string) ([]byte, error) {
 		Token: *ac.token,
 		Uid:   uint32(*ac.uid),
 	}
-	return protobuf.Marshal(req)
+
+	return protobuf.Marshal(nextSeq(), req)
 }
 
 func NewListCmd() *ListCmd {

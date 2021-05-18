@@ -6,7 +6,7 @@ import (
 	"github.com/panjf2000/gnet"
 )
 
-type Agent struct {
+type agent struct {
 	nodeID  int
 	agentID int
 

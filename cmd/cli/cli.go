@@ -37,12 +37,12 @@ func (cli *Cli) ReadLoop() {
 			continue
 		}
 
-		_, msg, err := protobuf.Unmarshal(data)
+		rawMsg, err := protobuf.Unmarshal(data)
 		if err != nil {
 			log.Printf("%s\n", err)
 			continue
 		}
-		log.Printf("%s\n", msg)
+		log.Printf("%v\n", *rawMsg)
 	}
 }
 

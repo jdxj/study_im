@@ -16,11 +16,11 @@ func init() {
 	registerMsg(p)
 }
 
-func Marshal(msg interface{}) ([]byte, error) {
-	return p.Marshal(msg)
+func Marshal(seq uint32, msg interface{}) ([]byte, error) {
+	return p.Marshal(seq, msg)
 }
 
-func Unmarshal(data []byte) (uint16, interface{}, error) {
+func Unmarshal(data []byte) (*RawMsg, error) {
 	return p.Unmarshal(data)
 }
 
