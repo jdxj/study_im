@@ -1,30 +1,20 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"time"
 
-	"github.com/jdxj/study_im/proto/login"
-
 	"github.com/asim/go-micro/v3"
-	"github.com/jdxj/study_im/dao/redis"
-	"github.com/panjf2000/gnet"
+	"github.com/micro/cli/v2"
 
 	"github.com/jdxj/study_im/config"
+	"github.com/jdxj/study_im/dao/redis"
 	"github.com/jdxj/study_im/logger"
-	"github.com/micro/cli/v2"
+	"github.com/jdxj/study_im/proto/login"
 )
 
 const (
-	modelName = "gate"
-)
-
-var (
-	conf *config.Config
-
-	loginService login.LoginService
+	modelName = "login"
 )
 
 func main() {
@@ -39,32 +29,12 @@ func main() {
 
 		micro.RegisterTTL(30*time.Second),
 		micro.RegisterInterval(10*time.Second),
-
-		micro.BeforeStart(func() error {
-			gateCfg := conf.Gate
-			gate, err := NewGate(gateCfg.Host, gateCfg.Port, gateCfg.Node)
-			if err != nil {
-				return err
-			}
-
-			fmt.Printf("%#v\n", gateCfg)
-			go gate.Serve()
-			return nil
-		}),
-		micro.BeforeStop(func() error {
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-
-			addr := fmt.Sprintf("%s:%d", conf.Gate.Host, conf.Gate.Port)
-			return gnet.Stop(ctx, addr)
-		}),
 	)
 
 	service.Init(
 		micro.Action(func(ctx *cli.Context) error {
-			var err error
 			path := ctx.String("configPath")
-			conf, err = config.New(path)
+			conf, err := config.New(path)
 			if err != nil {
 				return err
 			}
@@ -73,9 +43,12 @@ func main() {
 		}),
 	)
 
-	loginService = login.NewLoginService("login", service.Client())
+	err := login.RegisterLoginHandler(service.Server(), &LoginService{})
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	err := service.Run()
+	err = service.Run()
 	if err != nil {
 		log.Fatalln(err)
 	}

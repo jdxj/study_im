@@ -8,6 +8,10 @@ message Message {
 
 // 单对单消息
 
+service C2C {
+  rpc C2CSend (C2CSendRequest) returns (C2CSendResponse) {}
+}
+
 message C2CSendRequest {
   uint32 from = 1;
   uint32 to   = 2;

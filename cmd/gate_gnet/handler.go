@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
+
 	"github.com/jdxj/study_im/proto/chat"
 
 	"github.com/panjf2000/gnet"
 
 	"github.com/jdxj/study_im/codec/protobuf"
 	"github.com/jdxj/study_im/logger"
+	pbGate "github.com/jdxj/study_im/proto/gate"
 	"github.com/jdxj/study_im/proto/head"
 	"github.com/jdxj/study_im/proto/login"
 )
@@ -33,22 +36,22 @@ func (gate *Gate) handleHeartbeat(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]by
 }
 
 func (gate *Gate) handleAuthRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
+	clientID, ok := conn.Context().(int64)
+	if !ok { // 没有登录过
+		clientID = gate.nextID()
+	}
+
 	req := rawMsg.Msg.(*login.AuthRequest)
-	logger.Debugf("req: %s", req)
-	if conn.Context() != nil {
-		return nil, nil
+	req.Identity = &pbGate.Identity{
+		NodeId:   uint32(gate.nodeID),
+		ClientId: clientID,
+	}
+	resp, err := loginService.Auth(context.Background(), req)
+	if err != nil {
+		return nil, err
 	}
 
-	// 目前只是简单的添加到集合中, 没有认证
-	// todo: 认证
-
-	agentID := gate.nextID()
-	gate.am.AddAgent(agentID, conn)
-
-	resp := &login.AuthResponse{
-		Status: 1,
-		ErrMsg: "ok",
-	}
+	gate.am.AddAgent(clientID, conn)
 	return protobuf.Marshal(gate.sm.NextSeq(), resp)
 }
 

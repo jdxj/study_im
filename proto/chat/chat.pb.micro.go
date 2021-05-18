@@ -9,6 +9,13 @@ import (
 	math "math"
 )
 
+import (
+	context "context"
+	api "github.com/asim/go-micro/v3/api"
+	client "github.com/asim/go-micro/v3/client"
+	server "github.com/asim/go-micro/v3/server"
+)
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
@@ -19,3 +26,68 @@ var _ = math.Inf
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ api.Endpoint
+var _ context.Context
+var _ client.Option
+var _ server.Option
+
+// Api Endpoints for C2C service
+
+func NewC2CEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{}
+}
+
+// Client API for C2C service
+
+type C2CService interface {
+	C2CSend(ctx context.Context, in *C2CSendRequest, opts ...client.CallOption) (*C2CSendResponse, error)
+}
+
+type c2CService struct {
+	c    client.Client
+	name string
+}
+
+func NewC2CService(name string, c client.Client) C2CService {
+	return &c2CService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *c2CService) C2CSend(ctx context.Context, in *C2CSendRequest, opts ...client.CallOption) (*C2CSendResponse, error) {
+	req := c.c.NewRequest(c.name, "C2C.C2CSend", in)
+	out := new(C2CSendResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for C2C service
+
+type C2CHandler interface {
+	C2CSend(context.Context, *C2CSendRequest, *C2CSendResponse) error
+}
+
+func RegisterC2CHandler(s server.Server, hdlr C2CHandler, opts ...server.HandlerOption) error {
+	type c2C interface {
+		C2CSend(ctx context.Context, in *C2CSendRequest, out *C2CSendResponse) error
+	}
+	type C2C struct {
+		c2C
+	}
+	h := &c2CHandler{hdlr}
+	return s.Handle(s.NewHandler(&C2C{h}, opts...))
+}
+
+type c2CHandler struct {
+	C2CHandler
+}
+
+func (h *c2CHandler) C2CSend(ctx context.Context, in *C2CSendRequest, out *C2CSendResponse) error {
+	return h.C2CHandler.C2CSend(ctx, in, out)
+}

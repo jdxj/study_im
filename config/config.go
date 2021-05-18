@@ -89,7 +89,7 @@ type Redis struct {
 	Pass string `yaml:"pass"`
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
-	db   int    `yaml:"db"`
+	DB   int    `yaml:"db"`
 }
 
 type Rabbit struct {

@@ -6,7 +6,15 @@ package login
 import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	_ "github.com/jdxj/study_im/proto/gate"
 	math "math"
+)
+
+import (
+	context "context"
+	api "github.com/asim/go-micro/v3/api"
+	client "github.com/asim/go-micro/v3/client"
+	server "github.com/asim/go-micro/v3/server"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,3 +27,85 @@ var _ = math.Inf
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ api.Endpoint
+var _ context.Context
+var _ client.Option
+var _ server.Option
+
+// Api Endpoints for Login service
+
+func NewLoginEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{}
+}
+
+// Client API for Login service
+
+type LoginService interface {
+	Auth(ctx context.Context, in *AuthRequest, opts ...client.CallOption) (*AuthResponse, error)
+	Logout(ctx context.Context, in *LogoutRequest, opts ...client.CallOption) (*LogoutResponse, error)
+}
+
+type loginService struct {
+	c    client.Client
+	name string
+}
+
+func NewLoginService(name string, c client.Client) LoginService {
+	return &loginService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *loginService) Auth(ctx context.Context, in *AuthRequest, opts ...client.CallOption) (*AuthResponse, error) {
+	req := c.c.NewRequest(c.name, "Login.Auth", in)
+	out := new(AuthResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *loginService) Logout(ctx context.Context, in *LogoutRequest, opts ...client.CallOption) (*LogoutResponse, error) {
+	req := c.c.NewRequest(c.name, "Login.Logout", in)
+	out := new(LogoutResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Login service
+
+type LoginHandler interface {
+	Auth(context.Context, *AuthRequest, *AuthResponse) error
+	Logout(context.Context, *LogoutRequest, *LogoutResponse) error
+}
+
+func RegisterLoginHandler(s server.Server, hdlr LoginHandler, opts ...server.HandlerOption) error {
+	type login interface {
+		Auth(ctx context.Context, in *AuthRequest, out *AuthResponse) error
+		Logout(ctx context.Context, in *LogoutRequest, out *LogoutResponse) error
+	}
+	type Login struct {
+		login
+	}
+	h := &loginHandler{hdlr}
+	return s.Handle(s.NewHandler(&Login{h}, opts...))
+}
+
+type loginHandler struct {
+	LoginHandler
+}
+
+func (h *loginHandler) Auth(ctx context.Context, in *AuthRequest, out *AuthResponse) error {
+	return h.LoginHandler.Auth(ctx, in, out)
+}
+
+func (h *loginHandler) Logout(ctx context.Context, in *LogoutRequest, out *LogoutResponse) error {
+	return h.LoginHandler.Logout(ctx, in, out)
+}
