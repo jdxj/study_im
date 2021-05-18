@@ -4,6 +4,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/jdxj/study_im/dao/redis"
+
 	"github.com/jdxj/study_im/proto/chat"
 
 	"github.com/asim/go-micro/v3"
@@ -61,5 +63,8 @@ func Init(conf *config.Config) error {
 		loggerCfg.LocalTime, loggerCfg.Compress,
 	)
 
-	return nil
+	redisCfg := conf.Redis
+	err := redis.Init(redisCfg.Pass, redisCfg.Host, redisCfg.Port, redisCfg.DB)
+
+	return err
 }

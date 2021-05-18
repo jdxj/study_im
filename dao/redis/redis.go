@@ -17,5 +17,9 @@ func Init(pass, host string, port, db int) error {
 		Password: pass,
 		DB:       db,
 	})
-	return client.Ping(context.Background()).Err()
+	err := client.Ping(context.Background()).Err()
+	if err != nil {
+		return fmt.Errorf("redis err: %s", err)
+	}
+	return nil
 }
