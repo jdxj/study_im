@@ -41,6 +41,11 @@ type RawMsg struct {
 	Msg       interface{}
 }
 
+func (rawMsg *RawMsg) String() string {
+	return fmt.Sprintf("version:%d cmd:%d seq:%d timestamp:%d msg:{%s}",
+		rawMsg.Version, rawMsg.Cmd, rawMsg.Seq, rawMsg.Timestamp, rawMsg.Msg)
+}
+
 func NewProcessor() *Processor {
 	p := &Processor{
 		byteOrder:  binary.BigEndian,

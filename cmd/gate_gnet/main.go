@@ -48,7 +48,12 @@ func main() {
 			}
 
 			fmt.Printf("%#v\n", gateCfg)
-			go gate.Serve()
+			go func() {
+				err := gate.Serve()
+				if err != nil {
+					log.Printf("start gate server failed: %s\n", err)
+				}
+			}()
 			return nil
 		}),
 		micro.BeforeStop(func() error {

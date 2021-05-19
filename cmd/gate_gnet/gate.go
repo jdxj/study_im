@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 
+	pbGate "github.com/jdxj/study_im/proto/gate"
+
 	"github.com/bwmarrin/snowflake"
 	"github.com/panjf2000/gnet"
 
@@ -16,7 +18,7 @@ func NewGate(host string, port, nodeID int) (*Gate, error) {
 	gate := &Gate{
 		host:   host,
 		port:   port,
-		nodeID: int64(nodeID),
+		nodeID: uint32(nodeID),
 	}
 
 	gate.am = &AgentManager{
@@ -35,7 +37,7 @@ type Gate struct {
 	host string
 	port int
 
-	nodeID      int64
+	nodeID      uint32
 	idGenerator *snowflake.Node
 
 	am *AgentManager
@@ -62,6 +64,13 @@ func (gate *Gate) React(frame []byte, conn gnet.Conn) (out []byte, action gnet.A
 	return
 }
 
+func (gate *Gate) OnOpened(c gnet.Conn) (out []byte, action gnet.Action) {
+	agentID := gate.nextID()
+	c.SetContext(agentID)
+	gate.am.AddAgent(agentID, c)
+	return
+}
+
 func (gate *Gate) OnClosed(conn gnet.Conn, err error) (action gnet.Action) {
 	agentID, ok := conn.Context().(int64)
 	if !ok {
@@ -74,4 +83,11 @@ func (gate *Gate) OnClosed(conn gnet.Conn, err error) (action gnet.Action) {
 
 func (gate *Gate) nextID() int64 {
 	return gate.idGenerator.Generate().Int64()
+}
+
+func (gate *Gate) identify(clientID int64) *pbGate.Identity {
+	return &pbGate.Identity{
+		NodeId:   gate.nodeID,
+		ClientId: clientID,
+	}
 }

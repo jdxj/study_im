@@ -9,6 +9,7 @@ import (
 
 var (
 	client *redis.Client
+	ctx    = context.Background()
 )
 
 func Init(pass, host string, port, db int) error {
@@ -17,7 +18,7 @@ func Init(pass, host string, port, db int) error {
 		Password: pass,
 		DB:       db,
 	})
-	err := client.Ping(context.Background()).Err()
+	err := client.Ping(ctx).Err()
 	if err != nil {
 		return fmt.Errorf("redis err: %s", err)
 	}

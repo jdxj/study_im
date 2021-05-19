@@ -39,5 +39,21 @@ func (ls *LoginService) Auth(ctx context.Context, req *login.AuthRequest, reply 
 }
 
 func (ls *LoginService) Logout(ctx context.Context, req *login.LogoutRequest, reply *login.LogoutResponse) error {
+
+	session := &redis.Session{UserID: req.Uid}
+	err := session.Get()
+	if err != nil {
+		logger.Errorf("Get: %s", err)
+		return nil
+	}
+
+	if session.NodeID != req.Identity.NodeId || session.ClientID != req.Identity.ClientId {
+		return nil
+	}
+
+	err = session.Del()
+	if err != nil {
+		logger.Errorf("Del: %s", err)
+	}
 	return nil
 }

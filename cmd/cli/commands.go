@@ -9,14 +9,16 @@ import (
 )
 
 const (
-	List = "list"
-	Auth = "auth"
+	List   = "list"
+	Auth   = "auth"
+	Logout = "logout"
 )
 
 var (
 	cmdList = []string{
 		List,
 		Auth,
+		Logout,
 	}
 
 	commands = make(map[string]Parser)
@@ -33,6 +35,7 @@ func nextSeq() uint32 {
 func init() {
 	commands[List] = NewListCmd()
 	commands[Auth] = NewAuthCmd()
+	commands[Logout] = NewLogoutCmd()
 }
 
 type Parser interface {
@@ -67,6 +70,33 @@ func (ac *AuthCmd) Parse(args []string) ([]byte, error) {
 		Uid:   uint32(*ac.uid),
 	}
 
+	return protobuf.Marshal(nextSeq(), req)
+}
+
+func NewLogoutCmd() *LogoutCmd {
+	lc := &LogoutCmd{fs: flag.NewFlagSet(Logout, flag.ContinueOnError)}
+	lc.token = lc.fs.String("token", "test token", "auth token")
+	lc.uid = lc.fs.Uint("uid", 123, "user id")
+	return lc
+}
+
+type LogoutCmd struct {
+	fs *flag.FlagSet
+
+	token *string
+	uid   *uint
+}
+
+func (lc *LogoutCmd) Parse(args []string) ([]byte, error) {
+	err := lc.fs.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	req := &login.LogoutRequest{
+		Token: *lc.token,
+		Uid:   uint32(*lc.uid),
+	}
 	return protobuf.Marshal(nextSeq(), req)
 }
 

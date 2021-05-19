@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/binary"
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -33,6 +32,9 @@ func (cli *Cli) ReadLoop() {
 	for {
 		data, err := ResolveFrame(cli.conn)
 		if err != nil {
+			if err == io.EOF {
+				log.Fatalln("server already stopped")
+			}
 			log.Printf("%s\n", err)
 			continue
 		}
@@ -42,14 +44,13 @@ func (cli *Cli) ReadLoop() {
 			log.Printf("%s\n", err)
 			continue
 		}
-		log.Printf("%v\n", *rawMsg)
+		log.Printf("%s\n\n", rawMsg)
 	}
 }
 
 func (cli *Cli) WriteLoop() {
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Printf("> ")
 		// \n: LF 10
 		line, err := reader.ReadString(10)
 		if err != nil {

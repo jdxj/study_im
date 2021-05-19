@@ -9,7 +9,6 @@ import (
 
 	"github.com/jdxj/study_im/codec/protobuf"
 	"github.com/jdxj/study_im/logger"
-	pbGate "github.com/jdxj/study_im/proto/gate"
 	"github.com/jdxj/study_im/proto/head"
 	"github.com/jdxj/study_im/proto/login"
 )
@@ -22,6 +21,10 @@ func (gate *Gate) handle(conn gnet.Conn, rawMsg *protobuf.RawMsg) []byte {
 		data, err = gate.handleHeartbeat(conn, rawMsg)
 	case protobuf.AuthRequest:
 		data, err = gate.handleAuthRequest(conn, rawMsg)
+	case protobuf.LogoutRequest:
+		data, err = gate.handleLogoutRequest(conn, rawMsg)
+	default:
+		logger.Warnf("not handled: %d", rawMsg.Cmd)
 	}
 
 	if err != nil {
@@ -36,22 +39,27 @@ func (gate *Gate) handleHeartbeat(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]by
 }
 
 func (gate *Gate) handleAuthRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
-	clientID, ok := conn.Context().(int64)
-	if !ok { // 没有登录过
-		clientID = gate.nextID()
-	}
-
+	clientID := conn.Context().(int64)
 	req := rawMsg.Msg.(*login.AuthRequest)
-	req.Identity = &pbGate.Identity{
-		NodeId:   uint32(gate.nodeID),
-		ClientId: clientID,
-	}
+	req.Identity = gate.identify(clientID)
 	resp, err := loginService.Auth(context.Background(), req)
 	if err != nil {
 		return nil, err
 	}
 
-	gate.am.AddAgent(clientID, conn)
+	return protobuf.Marshal(gate.sm.NextSeq(), resp)
+}
+
+func (gate *Gate) handleLogoutRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
+	clientID := conn.Context().(int64)
+	req := rawMsg.Msg.(*login.LogoutRequest)
+	req.Identity = gate.identify(clientID)
+
+	resp, err := loginService.Logout(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+
 	return protobuf.Marshal(gate.sm.NextSeq(), resp)
 }
 

@@ -36,7 +36,7 @@ func (s *Session) Set() error {
 }
 
 func (s *Session) Get() error {
-	result, err := client.HMGet(context.Background(), s.key(), s.fields()...).Result()
+	result, err := client.HMGet(ctx, s.key(), s.fields()...).Result()
 	if err != nil {
 		return err
 	}
@@ -48,4 +48,8 @@ func (s *Session) Get() error {
 		}
 	}
 	return nil
+}
+
+func (s *Session) Del() error {
+	return client.Del(ctx, s.key()).Err()
 }
