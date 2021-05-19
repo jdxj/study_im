@@ -65,6 +65,12 @@ func Init(conf *config.Config) error {
 
 	redisCfg := conf.Redis
 	err := redis.Init(redisCfg.Pass, redisCfg.Host, redisCfg.Port, redisCfg.DB)
+	if err != nil {
+		return err
+	}
 
+	rabbitCfg := conf.Rabbit
+	err = InitBroker(
+		rabbitCfg.User, rabbitCfg.Pass, rabbitCfg.Host, "", rabbitCfg.Port)
 	return err
 }

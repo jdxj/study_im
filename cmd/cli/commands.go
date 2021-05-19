@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/jdxj/study_im/proto/chat"
+
 	"github.com/jdxj/study_im/codec/protobuf"
 	"github.com/jdxj/study_im/proto/login"
 )
@@ -12,6 +14,7 @@ const (
 	List   = "list"
 	Auth   = "auth"
 	Logout = "logout"
+	Send   = "send"
 )
 
 var (
@@ -19,6 +22,7 @@ var (
 		List,
 		Auth,
 		Logout,
+		Send,
 	}
 
 	commands = make(map[string]Parser)
@@ -36,6 +40,7 @@ func init() {
 	commands[List] = NewListCmd()
 	commands[Auth] = NewAuthCmd()
 	commands[Logout] = NewLogoutCmd()
+	commands[Send] = NewSendCmd()
 }
 
 type Parser interface {
@@ -109,7 +114,40 @@ type ListCmd struct {
 
 func (lc *ListCmd) Parse(args []string) ([]byte, error) {
 	for _, cmd := range cmdList {
-		fmt.Println(cmd)
+		fmt.Printf("- %s\n", cmd)
 	}
 	return nil, nil
+}
+
+func NewSendCmd() *SendCmd {
+	sc := &SendCmd{
+		fs: flag.NewFlagSet(Send, flag.ContinueOnError),
+	}
+	sc.from = sc.fs.Uint("from", 123, "from uid")
+	sc.to = sc.fs.Uint("to", 456, "to uid")
+	sc.msg = sc.fs.String("msg", "hello", "message")
+	return sc
+}
+
+// SendCmd 发送单聊或群聊消息
+type SendCmd struct {
+	fs *flag.FlagSet
+
+	from *uint
+	to   *uint
+	msg  *string
+}
+
+func (sc *SendCmd) Parse(args []string) ([]byte, error) {
+	err := sc.fs.Parse(args)
+	if err != nil {
+		return nil, err
+	}
+
+	req := &chat.C2CSendRequest{
+		From: uint32(*sc.from),
+		To:   uint32(*sc.to),
+		Msg:  &chat.Message{Text: *sc.msg},
+	}
+	return protobuf.Marshal(nextSeq(), req)
 }

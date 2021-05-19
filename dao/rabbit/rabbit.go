@@ -101,7 +101,7 @@ func (b *Broker) Publish(routingKey string, headers map[string]interface{}, body
 
 func (b *Broker) Subscribe(h Handler) error {
 	// 规定 queue 名称, 避免重启后创建多个 queue
-	queueName := fmt.Sprintf("%s.queue", b.bindingKey)
+	queueName := fmt.Sprintf("queue.%s", b.bindingKey)
 	// autoDelete 设置为 false, 避免队列中仍有消息时而遭到删除
 	queue, err := b.channel.QueueDeclare(
 		queueName, true, false, false, false, nil)

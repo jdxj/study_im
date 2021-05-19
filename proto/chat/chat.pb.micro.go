@@ -6,6 +6,7 @@ package chat
 import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	_ "github.com/jdxj/study_im/proto/gate"
 	math "math"
 )
 
@@ -43,6 +44,7 @@ func NewC2CEndpoints() []*api.Endpoint {
 
 type C2CService interface {
 	C2CSend(ctx context.Context, in *C2CSendRequest, opts ...client.CallOption) (*C2CSendResponse, error)
+	C2CPush(ctx context.Context, in *C2CPushResponse, opts ...client.CallOption) (*Options, error)
 }
 
 type c2CService struct {
@@ -67,15 +69,27 @@ func (c *c2CService) C2CSend(ctx context.Context, in *C2CSendRequest, opts ...cl
 	return out, nil
 }
 
+func (c *c2CService) C2CPush(ctx context.Context, in *C2CPushResponse, opts ...client.CallOption) (*Options, error) {
+	req := c.c.NewRequest(c.name, "C2C.C2CPush", in)
+	out := new(Options)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for C2C service
 
 type C2CHandler interface {
 	C2CSend(context.Context, *C2CSendRequest, *C2CSendResponse) error
+	C2CPush(context.Context, *C2CPushResponse, *Options) error
 }
 
 func RegisterC2CHandler(s server.Server, hdlr C2CHandler, opts ...server.HandlerOption) error {
 	type c2C interface {
 		C2CSend(ctx context.Context, in *C2CSendRequest, out *C2CSendResponse) error
+		C2CPush(ctx context.Context, in *C2CPushResponse, out *Options) error
 	}
 	type C2C struct {
 		c2C
@@ -90,4 +104,8 @@ type c2CHandler struct {
 
 func (h *c2CHandler) C2CSend(ctx context.Context, in *C2CSendRequest, out *C2CSendResponse) error {
 	return h.C2CHandler.C2CSend(ctx, in, out)
+}
+
+func (h *c2CHandler) C2CPush(ctx context.Context, in *C2CPushResponse, out *Options) error {
+	return h.C2CHandler.C2CPush(ctx, in, out)
 }

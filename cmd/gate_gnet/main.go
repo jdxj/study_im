@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/jdxj/study_im/proto/chat"
+
 	"github.com/jdxj/study_im/proto/login"
 
 	"github.com/asim/go-micro/v3"
@@ -25,6 +27,7 @@ var (
 	conf *config.Config
 
 	loginService login.LoginService
+	c2cService   chat.C2CService
 )
 
 func main() {
@@ -43,6 +46,10 @@ func main() {
 		micro.BeforeStart(func() error {
 			gateCfg := conf.Gate
 			gate, err := NewGate(gateCfg.Host, gateCfg.Port, gateCfg.Node)
+			if err != nil {
+				return err
+			}
+			err = broker.Subscribe(gate.handleBroker)
 			if err != nil {
 				return err
 			}
@@ -79,6 +86,7 @@ func main() {
 	)
 
 	loginService = login.NewLoginService("login", service.Client())
+	c2cService = chat.NewC2CService("c2c", service.Client())
 
 	err := service.Run()
 	if err != nil {
@@ -95,5 +103,13 @@ func Init(conf *config.Config) error {
 
 	redisCfg := conf.Redis
 	err := redis.Init(redisCfg.Pass, redisCfg.Host, redisCfg.Port, redisCfg.DB)
+	if err != nil {
+		return err
+	}
+
+	rabbitCfg := conf.Rabbit
+	bindingKey := fmt.Sprintf("node.%d", conf.Gate.Node)
+	err = InitBroker(
+		rabbitCfg.User, rabbitCfg.Pass, rabbitCfg.Host, bindingKey, rabbitCfg.Port)
 	return err
 }

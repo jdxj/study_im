@@ -23,6 +23,8 @@ func (gate *Gate) handle(conn gnet.Conn, rawMsg *protobuf.RawMsg) []byte {
 		data, err = gate.handleAuthRequest(conn, rawMsg)
 	case protobuf.LogoutRequest:
 		data, err = gate.handleLogoutRequest(conn, rawMsg)
+	case protobuf.C2CSendRequest:
+		data, err = gate.handleC2CSendRequest(conn, rawMsg)
 	default:
 		logger.Warnf("not handled: %d", rawMsg.Cmd)
 	}
@@ -64,9 +66,14 @@ func (gate *Gate) handleLogoutRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) (
 }
 
 func (gate *Gate) handleC2CSendRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
+	clientID := conn.Context().(int64)
 	req := rawMsg.Msg.(*chat.C2CSendRequest)
-	logger.Debugf("req: %s", req)
+	req.Identity = gate.identify(clientID)
 
-	resp := &chat.C2CSendResponse{MsgId: 888}
+	resp, err := c2cService.C2CSend(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+
 	return protobuf.Marshal(gate.sm.NextSeq(), resp)
 }

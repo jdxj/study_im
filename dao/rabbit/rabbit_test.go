@@ -2,6 +2,7 @@ package rabbit
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -52,6 +53,8 @@ func TestPubAndSub(t *testing.T) {
 	}
 
 	err = b2.Subscribe(func(m map[string]interface{}, msg []byte) error {
+		logicType := reflect.TypeOf(m["logic"])
+		fmt.Printf("logicType: %s\n", logicType.Kind())
 		fmt.Printf("%s\n", msg)
 		return err
 	})
@@ -61,7 +64,9 @@ func TestPubAndSub(t *testing.T) {
 
 	for {
 		time.Sleep(time.Second)
-		err = b1.Publish("b2", nil, []byte("hello"))
+		m := make(map[string]interface{})
+		m["logic"] = uint32(2)
+		err = b1.Publish("b2", m, []byte("hello"))
 		if err != nil {
 			t.Fatalf("%s\n", err)
 		}
