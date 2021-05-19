@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jdxj/study_im/logger"
+
 	"github.com/streadway/amqp"
 )
 
-// todo: rabbit 的连接需要设计
+type Handler func(map[string]interface{}, []byte) error
 
 const (
 	exchangeName = "im"
+	exchangeKind = "topic"
 )
 
 var (
@@ -24,13 +27,12 @@ func Init(user, pass, host string, port int) (err error) {
 	return
 }
 
-func New(user, pass, host, bindingKey, queueName string, port int) *Broker {
+func New(user, pass, host, bindingKey string, port int) *Broker {
 	b := &Broker{
 		user:       user,
 		pass:       pass,
 		host:       host,
 		bindingKey: bindingKey,
-		queueName:  queueName,
 		port:       port,
 	}
 	return b
@@ -63,7 +65,7 @@ func (b *Broker) Connect() error {
 
 	err = b.channel.ExchangeDeclare(
 		exchangeName,
-		"topic",
+		exchangeKind,
 		true,
 		false,
 		false,
@@ -73,10 +75,12 @@ func (b *Broker) Connect() error {
 	return err
 }
 
-func (b *Broker) Publish(routingKey string, body []byte) error {
+// MIME list: https://www.iana.org/assignments/media-types/media-types.xhtml
+
+func (b *Broker) Publish(routingKey string, headers map[string]interface{}, body []byte) error {
 	msg := amqp.Publishing{
-		Headers:         nil,
-		ContentType:     "text/plain",
+		Headers:         headers,
+		ContentType:     "application/octet-stream",
 		ContentEncoding: "",
 		DeliveryMode:    2,
 		Priority:        0,
@@ -90,33 +94,46 @@ func (b *Broker) Publish(routingKey string, body []byte) error {
 		AppId:           "",
 		Body:            body,
 	}
-	err := b.channel.Publish(exchangeName, routingKey, true, false, msg)
+	// todo: mandatory 如何配置?
+	err := b.channel.Publish(exchangeName, routingKey, false, false, msg)
 	return err
 }
 
-func (b *Broker) Subscribe() error {
+func (b *Broker) Subscribe(h Handler) error {
+	// 规定 queue 名称, 避免重启后创建多个 queue
+	queueName := fmt.Sprintf("%s.queue", b.bindingKey)
+	// autoDelete 设置为 false, 避免队列中仍有消息时而遭到删除
 	queue, err := b.channel.QueueDeclare(
-		b.queueName, true, false, false, false, nil)
+		queueName, true, false, false, false, nil)
 	if err != nil {
 		return err
 	}
+
 	err = b.channel.QueueBind(queue.Name, b.bindingKey, exchangeName, false, nil)
 	if err != nil {
 		return err
 	}
 
-	msgChan, err := b.channel.Consume(queue.Name, "", false, false, false, false, nil)
+	msgChan, err := b.channel.Consume(
+		queue.Name, "", false, false, false, false, nil)
 	if err != nil {
 		return err
 	}
 
 	go func() {
 		for {
+			// todo: 是否使用多个 goroutine?
 			msg := <-msgChan
-			fmt.Printf("receive: %s\n", msg.Body)
-			err := msg.Ack(false)
+			// todo: 使用 err 来判断是否需要 ack 的做法是否合适?
+			err := h(msg.Headers, msg.Body)
 			if err != nil {
-				fmt.Println(err)
+				logger.Errorf("rabbit handler: %s", err)
+				continue
+			}
+
+			err = msg.Ack(false)
+			if err != nil {
+				logger.Errorf("rabbit ack: %s", err)
 			}
 		}
 	}()
