@@ -1,8 +1,9 @@
 package v1
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func Handlers() []func() (string, string, func(ctx *gin.Context)) {
@@ -21,4 +22,13 @@ func ping() (string, string, func(*gin.Context)) {
 		})
 	}
 	return method, path, handler
+}
+
+func userPost() (string, string, func(*gin.Context)) {
+	method := http.MethodPost
+	path := "/user"
+
+	handler := func(ctx *gin.Context) {
+
+	}
 }
