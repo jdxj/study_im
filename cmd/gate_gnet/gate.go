@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	pbGate "github.com/jdxj/study_im/proto/gate"
-
 	"github.com/bwmarrin/snowflake"
 	"github.com/panjf2000/gnet"
 
@@ -83,11 +81,4 @@ func (gate *Gate) OnClosed(conn gnet.Conn, err error) (action gnet.Action) {
 
 func (gate *Gate) nextID() int64 {
 	return gate.idGenerator.Generate().Int64()
-}
-
-func (gate *Gate) identify(clientID int64) *pbGate.Identity {
-	return &pbGate.Identity{
-		NodeId:   gate.nodeID,
-		ClientId: clientID,
-	}
 }

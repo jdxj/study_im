@@ -10,33 +10,52 @@ message Message {
 
 // 单对单消息
 
-message Options {}
-
 service C2C {
-  rpc C2CSend (C2CSendRequest) returns (C2CSendResponse) {}
-  rpc C2CPush (C2CPushResponse) returns (Options) {}
+  rpc C2CMsg (C2CMsgR) returns (C2CMsgA) {}
+  rpc C2CAck (C2CAckR) returns (C2CAckA) {}
 }
 
-message C2CSendRequest {
+// 保证消息投递有6步: http://www.52im.net/thread-294-1-1.html
+
+// 1. msg:R
+message C2CMsgR {
   gate.Identity identity = 1;
 
-  uint32 from = 2;
-  uint32 to   = 3;
-  Message msg = 4;
+  uint32 from  = 2;
+  uint32 to    = 3;
+  Message msg  = 4;
+  int64 msg_id = 5;
 }
 
-message C2CSendResponse {
-  uint64 msg_id = 1;
+// 2. msg:A
+message C2CMsgA {
+  int64 msg_id = 1;
 }
 
-message C2CPushRequest {
+// 6. ack:N
+message C2CAckN {
+  int64 msg_id = 1;
+}
+
+// 3. msg:N
+message C2CMsgN {
   uint32 from   = 1;
   Message msg   = 2;
-  uint64 msg_id = 3;
+  int64 msg_id = 3;
 }
 
-message C2CPushResponse {
-  uint64 msg_id = 1;
+// 4. ack:R
+message C2CAckR {
+  gate.Identity identity = 1;
+
+  uint32 from  = 2;
+  uint32 to    = 3;
+  int64 msg_id = 4;
+}
+
+// 5. ack:A
+message C2CAckA {
+  int64 msg_id = 1;
 }
 
 // 群聊

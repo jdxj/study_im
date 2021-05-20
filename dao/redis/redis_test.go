@@ -72,3 +72,13 @@ func TestSession_Get(t *testing.T) {
 	}
 	fmt.Printf("%#v, %d\n", *s, s.UserID)
 }
+
+func TestNextGroupChatSeq(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		seq, err := NextGroupChatSeq(123456)
+		if err != nil {
+			t.Fatalf("%s\n", err)
+		}
+		fmt.Printf("seq: %d\n", seq)
+	}
+}

@@ -2,6 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"time"
+
+	"github.com/jdxj/study_im/dao/mysql"
 
 	"github.com/jdxj/study_im/dao/redis"
 	"github.com/jdxj/study_im/logger"
@@ -10,39 +14,86 @@ import (
 )
 
 type C2CService struct {
-	msgID uint64
 }
 
-func (c2c *C2CService) C2CSend(ctx context.Context, req *chat.C2CSendRequest, reply *chat.C2CSendResponse) error {
-	// todo: 消息存储
+func (c2c *C2CService) C2CMsg(ctx context.Context, req *chat.C2CMsgR, reply *chat.C2CMsgA) error {
+	msgID := req.MsgId
+	if req.MsgId != 0 {
+		content, _ := json.Marshal(req.Msg)
+		ms := &mysql.MessageSend{
+			FromID:   req.From,
+			ToID:     req.To,
+			Seq:      req.Identity.Seq,
+			Content:  content,
+			SendTime: time.Now(),
+			SendType: 1,
+		}
+		err := ms.Insert()
+		if err != nil {
+			//reply.MsgId == 0 表示出错, 发送失败
+			logger.Errorf("ms.Insert: %s", err)
+			return nil
+		}
+		msgID = ms.ID
+	}
 
-	c2c.msgID++
-	reply.MsgId = c2c.msgID
-
-	pushReq := &chat.C2CPushRequest{
+	msgN := &chat.C2CMsgN{
 		From:  req.From,
 		Msg:   req.Msg,
-		MsgId: c2c.msgID,
+		MsgId: msgID,
 	}
 
 	session := redis.Session{UserID: req.To}
 	err := session.Get()
-	if err != nil {
-		logger.Errorf("Get: %s", err)
-		return nil
-	}
-	if session.NodeID == 0 { // 不在线
+	if err != nil || session.NodeID == 0 {
+		if err != nil {
+			logger.Errorf("session.Get: %s", err)
+		}
+
+		// 发送伪 ackN
+		ackN := &chat.C2CAckN{MsgId: msgID}
+		identity := req.Identity
+		err = Publish(identity.NodeId, identity.Seq, identity.ClientId, ackN)
+		if err != nil {
+			logger.Errorf("Publish: %s", err)
+		}
 		return nil
 	}
 
-	err = Publish(session.NodeID, session.ClientID, pushReq)
+	err = Publish(session.NodeID, req.Identity.Seq, session.ClientID, msgN)
 	if err != nil {
 		logger.Errorf("Publish: %s", err)
 	}
 	return nil
 }
 
-// todo: 实现
-func (c2c *C2CService) C2CPush(ctx context.Context, req *chat.C2CPushResponse, ops *chat.Options) error {
+func (c2c *C2CService) C2CAck(ctx context.Context, req *chat.C2CAckR, reply *chat.C2CAckA) error {
+	mr := &mysql.MessageReceive{
+		ToID:      req.To,
+		MessageID: req.MsgId,
+	}
+	err := mr.SetRead()
+	if err != nil {
+		logger.Errorf("mr.SetRead(): %s", err)
+		return nil
+	}
+	reply.MsgId = req.MsgId
+
+	session := &redis.Session{UserID: req.From}
+	err = session.Get()
+	if err != nil || session.NodeID == 0 { // 发送方不在线就无所谓了
+		if err != nil {
+			logger.Errorf("session.Get: %s", err)
+		}
+		return nil
+	}
+
+	ackN := &chat.C2CAckN{
+		MsgId: req.MsgId,
+	}
+	err = Publish(session.NodeID, req.Identity.Seq, req.Identity.ClientId, ackN)
+	if err != nil {
+		logger.Errorf("Publish: %s", err)
+	}
 	return nil
 }

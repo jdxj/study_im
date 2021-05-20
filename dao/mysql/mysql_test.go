@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestInit(t *testing.T) {
@@ -67,4 +68,45 @@ func TestUser_Get(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Printf("%#v, exists: %t\n", u, exists)
+}
+
+func TestMessageSend_Insert(t *testing.T) {
+	ms := &MessageSend{
+		ID:       0,
+		FromID:   123,
+		ToID:     456,
+		Seq:      2,
+		Content:  []byte("hello"),
+		SendTime: time.Now(),
+		SendType: 1,
+	}
+	err := ms.Insert()
+	if err != nil {
+		t.Fatalf("%s\n", err)
+	}
+}
+
+func TestMessageReceive_Insert(t *testing.T) {
+	mr := &MessageReceive{
+		ID:        0,
+		FromID:    123,
+		ToID:      456,
+		MessageID: 2,
+		Flag:      1,
+	}
+	err := mr.Insert()
+	if err != nil {
+		t.Fatalf("%s\n", err)
+	}
+}
+
+func TestMessageReceive_SetRead(t *testing.T) {
+	mr := &MessageReceive{
+		ToID:      456,
+		MessageID: 1,
+	}
+	err := mr.SetRead()
+	if err != nil {
+		t.Fatalf("%s\n", err)
+	}
 }

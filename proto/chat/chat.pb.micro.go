@@ -43,8 +43,8 @@ func NewC2CEndpoints() []*api.Endpoint {
 // Client API for C2C service
 
 type C2CService interface {
-	C2CSend(ctx context.Context, in *C2CSendRequest, opts ...client.CallOption) (*C2CSendResponse, error)
-	C2CPush(ctx context.Context, in *C2CPushResponse, opts ...client.CallOption) (*Options, error)
+	C2CMsg(ctx context.Context, in *C2CMsgR, opts ...client.CallOption) (*C2CMsgA, error)
+	C2CAck(ctx context.Context, in *C2CAckR, opts ...client.CallOption) (*C2CAckA, error)
 }
 
 type c2CService struct {
@@ -59,9 +59,9 @@ func NewC2CService(name string, c client.Client) C2CService {
 	}
 }
 
-func (c *c2CService) C2CSend(ctx context.Context, in *C2CSendRequest, opts ...client.CallOption) (*C2CSendResponse, error) {
-	req := c.c.NewRequest(c.name, "C2C.C2CSend", in)
-	out := new(C2CSendResponse)
+func (c *c2CService) C2CMsg(ctx context.Context, in *C2CMsgR, opts ...client.CallOption) (*C2CMsgA, error) {
+	req := c.c.NewRequest(c.name, "C2C.C2CMsg", in)
+	out := new(C2CMsgA)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -69,9 +69,9 @@ func (c *c2CService) C2CSend(ctx context.Context, in *C2CSendRequest, opts ...cl
 	return out, nil
 }
 
-func (c *c2CService) C2CPush(ctx context.Context, in *C2CPushResponse, opts ...client.CallOption) (*Options, error) {
-	req := c.c.NewRequest(c.name, "C2C.C2CPush", in)
-	out := new(Options)
+func (c *c2CService) C2CAck(ctx context.Context, in *C2CAckR, opts ...client.CallOption) (*C2CAckA, error) {
+	req := c.c.NewRequest(c.name, "C2C.C2CAck", in)
+	out := new(C2CAckA)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -82,14 +82,14 @@ func (c *c2CService) C2CPush(ctx context.Context, in *C2CPushResponse, opts ...c
 // Server API for C2C service
 
 type C2CHandler interface {
-	C2CSend(context.Context, *C2CSendRequest, *C2CSendResponse) error
-	C2CPush(context.Context, *C2CPushResponse, *Options) error
+	C2CMsg(context.Context, *C2CMsgR, *C2CMsgA) error
+	C2CAck(context.Context, *C2CAckR, *C2CAckA) error
 }
 
 func RegisterC2CHandler(s server.Server, hdlr C2CHandler, opts ...server.HandlerOption) error {
 	type c2C interface {
-		C2CSend(ctx context.Context, in *C2CSendRequest, out *C2CSendResponse) error
-		C2CPush(ctx context.Context, in *C2CPushResponse, out *Options) error
+		C2CMsg(ctx context.Context, in *C2CMsgR, out *C2CMsgA) error
+		C2CAck(ctx context.Context, in *C2CAckR, out *C2CAckA) error
 	}
 	type C2C struct {
 		c2C
@@ -102,10 +102,10 @@ type c2CHandler struct {
 	C2CHandler
 }
 
-func (h *c2CHandler) C2CSend(ctx context.Context, in *C2CSendRequest, out *C2CSendResponse) error {
-	return h.C2CHandler.C2CSend(ctx, in, out)
+func (h *c2CHandler) C2CMsg(ctx context.Context, in *C2CMsgR, out *C2CMsgA) error {
+	return h.C2CHandler.C2CMsg(ctx, in, out)
 }
 
-func (h *c2CHandler) C2CPush(ctx context.Context, in *C2CPushResponse, out *Options) error {
-	return h.C2CHandler.C2CPush(ctx, in, out)
+func (h *c2CHandler) C2CAck(ctx context.Context, in *C2CAckR, out *C2CAckA) error {
+	return h.C2CHandler.C2CAck(ctx, in, out)
 }

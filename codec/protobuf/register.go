@@ -34,10 +34,13 @@ const (
 	KickOutRequest
 	KickOutResponse
 
-	C2CSendRequest
-	C2CSendResponse
-	C2CPushRequest
-	C2CPushResponse
+	C2CMsgR
+	C2CMsgA
+	C2CMsgN
+	C2CAckR
+	C2CAckA
+	C2CAckN
+
 	C2GSendRequest
 	C2GSendResponse
 	C2GPushRequest
@@ -56,10 +59,13 @@ func registerMsg(p *Processor) {
 	p.Register(KickOutRequest, &login.KickOutRequest{})
 	p.Register(KickOutResponse, &login.KickOutResponse{})
 
-	p.Register(C2CSendRequest, &chat.C2CSendRequest{})
-	p.Register(C2CSendResponse, &chat.C2CSendResponse{})
-	p.Register(C2CPushRequest, &chat.C2CPushRequest{})
-	p.Register(C2CPushResponse, &chat.C2CPushResponse{})
+	p.Register(C2CMsgR, &chat.C2CMsgR{})
+	p.Register(C2CMsgA, &chat.C2CMsgA{})
+	p.Register(C2CMsgN, &chat.C2CMsgN{})
+	p.Register(C2CAckR, &chat.C2CAckR{})
+	p.Register(C2CAckA, &chat.C2CAckA{})
+	p.Register(C2CAckN, &chat.C2CAckN{})
+
 	p.Register(C2GSendRequest, &chat.C2GSendRequest{})
 	p.Register(C2GSendResponse, &chat.C2GSendResponse{})
 	p.Register(C2GPushRequest, &chat.C2GPushRequest{})

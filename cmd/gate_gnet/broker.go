@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/jdxj/study_im/codec/protobuf"
 	"github.com/jdxj/study_im/dao/rabbit"
 	"github.com/jdxj/study_im/logger"
 )
@@ -38,25 +37,16 @@ func (gate *Gate) handleBroker(headers map[string]interface{}, body []byte) erro
 		return nil
 	}
 
-	rawMsg, err := protobuf.Unmarshal(body)
-	if err != nil {
-		logger.Errorf("Unmarshal: %s", err)
-		return nil
-	}
-
 	// todo: 实现单发/群发
 	switch typ {
 	case "c2c":
-		body, err = protobuf.Marshal(gate.sm.NextSeq(), rawMsg.Msg)
-		if err != nil {
-			// 可能是数据错误, 让 rabbit 重发
-			return err
-		}
 		conn := gate.am.GetAgent(logicID)
 		err := conn.AsyncWrite(body)
 		if err != nil {
 			logger.Errorf("AsyncWrite: %s", err)
 		}
+	default:
+		logger.Warnf("not define typ: %s", typ)
 	}
 	return nil
 }
