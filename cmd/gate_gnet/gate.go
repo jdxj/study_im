@@ -19,9 +19,9 @@ func NewGate(host string, port, nodeID int) (*Gate, error) {
 		nodeID: uint32(nodeID),
 	}
 
-	gate.am = &AgentManager{
-		mutex:  &sync.RWMutex{},
-		agents: make(map[int64]gnet.Conn),
+	gate.am = &ClientManager{
+		mutex:   &sync.RWMutex{},
+		clients: make(map[int64]gnet.Conn),
 	}
 	gate.sm = &SeqManager{}
 
@@ -38,7 +38,7 @@ type Gate struct {
 	nodeID      uint32
 	idGenerator *snowflake.Node
 
-	am *AgentManager
+	am *ClientManager
 	sm *SeqManager // todo: seq 由发送队列管理
 }
 
@@ -65,7 +65,7 @@ func (gate *Gate) React(frame []byte, conn gnet.Conn) (out []byte, action gnet.A
 func (gate *Gate) OnOpened(c gnet.Conn) (out []byte, action gnet.Action) {
 	agentID := gate.nextID()
 	c.SetContext(agentID)
-	gate.am.AddAgent(agentID, c)
+	gate.am.AddClient(agentID, c)
 	return
 }
 

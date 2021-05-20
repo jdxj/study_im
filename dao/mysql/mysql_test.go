@@ -103,7 +103,7 @@ func TestMessageReceive_Insert(t *testing.T) {
 func TestMessageReceive_SetRead(t *testing.T) {
 	mr := &MessageReceive{
 		ToID:      456,
-		MessageID: 1,
+		MessageID: 2,
 	}
 	err := mr.SetRead()
 	if err != nil {

@@ -40,7 +40,7 @@ func (gate *Gate) handleBroker(headers map[string]interface{}, body []byte) erro
 	// todo: 实现单发/群发
 	switch typ {
 	case "c2c":
-		conn := gate.am.GetAgent(logicID)
+		conn := gate.am.GetClient(logicID)
 		err := conn.AsyncWrite(body)
 		if err != nil {
 			logger.Errorf("AsyncWrite: %s", err)
