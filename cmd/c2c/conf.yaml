@@ -16,11 +16,11 @@ web:
   port: 0
   mode: ""
 mysql:
-  user: ""
-  pass: ""
-  dbname: ""
-  host: ""
-  port: 0
+  user: "root"
+  pass: "123456"
+  dbname: "im"
+  host: "127.0.0.1"
+  port: 3306
 mongo:
   user: ""
   pass: ""

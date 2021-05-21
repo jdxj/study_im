@@ -33,7 +33,7 @@ redis:
   port: 6379
   db: 0
 rabbit:
-  user: ""
-  pass: ""
-  host: ""
-  port: 0
+  user: "guest"
+  pass: "guest"
+  host: "127.0.0.1"
+  port: 5672

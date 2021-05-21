@@ -6,13 +6,13 @@ import (
 	"github.com/panjf2000/gnet"
 )
 
-// todo: 并发测试
-
 type Client struct {
+	connID int64
 	userID uint32
 	conn   gnet.Conn
 }
 
+// ClientManager 已登录的连接, todo: 需要配合心跳机制
 type ClientManager struct {
 	mutex   sync.RWMutex
 	clients map[uint32]*Client
@@ -29,8 +29,6 @@ func (cm *ClientManager) AddClient(userID uint32, client *Client) {
 	cm.mutex.Lock()
 	cm.clients[userID] = client
 	cm.mutex.Unlock()
-
-	client.conn.SetContext(userID)
 }
 
 func (cm *ClientManager) DelClient(userID uint32) {
@@ -92,4 +90,33 @@ func (gm *GroupManager) Range(groupID uint32, f func(uint32, *Client)) {
 	if group != nil {
 		group.cm.Range(f)
 	}
+}
+
+// RelationManager 已与 Gate 建立 tcp 的连接,
+// Gate 不应该主动关闭连接
+type RelationManager struct {
+	mutex       sync.RWMutex
+	connections map[int64]gnet.Conn
+}
+
+func (rm *RelationManager) GetConn(connID int64) gnet.Conn {
+	rm.mutex.RLock()
+	conn := rm.connections[connID]
+	rm.mutex.RUnlock()
+	return conn
+}
+
+func (rm *RelationManager) AddConn(connID int64, conn gnet.Conn) {
+	rm.mutex.Lock()
+	_, ok := rm.connections[connID]
+	if !ok {
+		rm.connections[connID] = conn
+	}
+	rm.mutex.Unlock()
+}
+
+func (rm *RelationManager) DelConn(connID int64) {
+	rm.mutex.Lock()
+	delete(rm.connections, connID)
+	rm.mutex.Unlock()
 }

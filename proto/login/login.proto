@@ -11,17 +11,26 @@ service Login {
   rpc Logout (LogoutRequest) returns (LogoutResponse) {}
 }
 
+enum Status {
+  AuthSuccessful = 0;
+  InvalidToken   = 1;
+  InternalError  = 2;
+  RepeatAuth     = 3;
+  KickAuthed     = 4;
+  LogoutSuccess  = 5;
+}
+
 // 认证
 
 message AuthRequest {
   gate.Identity identity = 1;
 
-  string token = 2;
-  uint32 uid   = 3;
+  string token  = 2;
+  uint32 userID = 3;
 }
 
 message AuthResponse {
-  int32 status   = 1;
+  Status code    = 1;
   string err_msg = 2;
 }
 
@@ -30,18 +39,18 @@ message AuthResponse {
 message LogoutRequest {
   gate.Identity identity = 1;
 
-  string token = 2;
-  uint32 uid   = 3;
+  string token  = 2;
+  uint32 userID = 3;
 }
 
 message LogoutResponse {
-
+  Status code = 1;
 }
 
 // 踢人
 
 enum Reason {
-  OTHER_LOGIN = 0;
+  OtherLogin = 0;
 }
 
 message KickOutRequest {

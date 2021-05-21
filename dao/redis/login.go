@@ -12,9 +12,9 @@ const (
 )
 
 type Session struct {
-	NodeID   uint32
-	ClientID int64
-	UserID   uint32
+	NodeID uint32
+	ConnID int64
+	UserID uint32
 }
 
 func (s *Session) key() string {
@@ -23,7 +23,7 @@ func (s *Session) key() string {
 
 func (s *Session) fields() []string {
 	return []string{
-		"NodeID", "ClientID", "UserID",
+		"NodeID", "ConnID", "UserID",
 	}
 }
 

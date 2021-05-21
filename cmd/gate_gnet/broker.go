@@ -22,31 +22,53 @@ func (gate *Gate) handleBroker(headers map[string]interface{}, body []byte) erro
 
 	nodeID, ok := headers["nodeID"].(int64)
 	if ok && nodeID != int64(gate.nodeID) {
-		logger.Warnf("handleBroker: mismatch node: %d", nodeID)
+		logger.Warnf("handleBroker: mismatch node: %v", headers["nodeID"])
 		return nil
 	}
 
-	typ, ok := headers["type"].(string)
+	action, ok := headers["action"].(string)
 	if !ok {
-		logger.Warnf("handleBroker: invalid typ: %v", headers["type"])
-	}
-
-	logicID, ok := headers["logicID"].(int64)
-	if !ok {
-		logger.Warnf("handleBroker: logicID not found: %d", headers["logicID"])
+		logger.Errorf("handleBroker: invalid action: %v", headers["action"])
 		return nil
 	}
 
-	// todo: 实现单发/群发
-	switch typ {
+	switch action {
+	case "kick":
+		userID, ok := headers["userID"].(int64)
+		if !ok {
+			logger.Errorf("invalid userID: %v", headers["userID"])
+			return nil
+		}
+		connID, ok := headers["connID"].(int64)
+		if !ok {
+			logger.Errorf("invalid connID: %v", headers["connID"])
+			return nil
+		}
+
+		gate.cm.DelClient(uint32(userID))
+		conn := gate.rm.GetConn(connID)
+		if conn != nil {
+			err := conn.AsyncWrite(body)
+			if err != nil {
+				logger.Errorf("AsyncWrite: %s", err)
+			}
+		}
+
 	case "c2c":
-		conn := gate.am.GetClient(logicID)
-		err := conn.AsyncWrite(body)
-		if err != nil {
-			logger.Errorf("AsyncWrite: %s", err)
+		userID, ok := headers["userID"].(int64)
+		if !ok {
+			logger.Errorf("invalid userID: %v", headers["userID"])
+			return nil
+		}
+		client := gate.cm.GetClient(uint32(userID))
+		if client != nil {
+			err := client.conn.AsyncWrite(body)
+			if err != nil {
+				logger.Errorf("AsyncWrite: %s", err)
+			}
 		}
 	default:
-		logger.Warnf("not define typ: %s", typ)
+		logger.Warnf("not define action: %s", action)
 	}
 	return nil
 }

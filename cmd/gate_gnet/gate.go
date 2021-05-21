@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/panjf2000/gnet"
@@ -19,11 +18,15 @@ func NewGate(host string, port, nodeID int) (*Gate, error) {
 		nodeID: uint32(nodeID),
 	}
 
-	gate.am = &ClientManager{
-		mutex:   &sync.RWMutex{},
-		clients: make(map[int64]gnet.Conn),
+	gate.cm = &ClientManager{
+		clients: make(map[uint32]*Client, 100000),
 	}
-	gate.sm = &SeqManager{}
+	//gate.gm = &GroupManager{
+	//	groups: make(map[uint32]*Group, 1000),
+	//}
+	gate.rm = &RelationManager{
+		connections: make(map[int64]gnet.Conn),
+	}
 
 	var err error
 	gate.idGenerator, err = snowflake.NewNode(int64(nodeID))
@@ -38,8 +41,10 @@ type Gate struct {
 	nodeID      uint32
 	idGenerator *snowflake.Node
 
-	am *ClientManager
-	sm *SeqManager // todo: seq 由发送队列管理
+	// todo: 心跳
+	cm *ClientManager
+	//gm *GroupManager
+	rm *RelationManager
 }
 
 func (gate *Gate) Serve() error {
@@ -63,22 +68,18 @@ func (gate *Gate) React(frame []byte, conn gnet.Conn) (out []byte, action gnet.A
 }
 
 func (gate *Gate) OnOpened(c gnet.Conn) (out []byte, action gnet.Action) {
-	agentID := gate.nextID()
-	c.SetContext(agentID)
-	gate.am.AddClient(agentID, c)
+	connID := gate.nextConnID()
+	c.SetContext(connID)
+	gate.rm.AddConn(connID, c)
 	return
 }
 
 func (gate *Gate) OnClosed(conn gnet.Conn, err error) (action gnet.Action) {
-	agentID, ok := conn.Context().(int64)
-	if !ok {
-		return
-	}
-	gate.am.DelAgent(agentID)
-	logger.Debugf("del agent: %d", agentID)
+	connID := conn.Context().(int64)
+	gate.rm.DelConn(connID)
 	return
 }
 
-func (gate *Gate) nextID() int64 {
+func (gate *Gate) nextConnID() int64 {
 	return gate.idGenerator.Generate().Int64()
 }

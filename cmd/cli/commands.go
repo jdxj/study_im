@@ -71,8 +71,8 @@ func (ac *AuthCmd) Parse(args []string) ([]byte, error) {
 	}
 
 	req := &login.AuthRequest{
-		Token: *ac.token,
-		Uid:   uint32(*ac.uid),
+		Token:  *ac.token,
+		UserID: uint32(*ac.uid),
 	}
 
 	return protobuf.Marshal(nextSeq(), req)
@@ -99,8 +99,8 @@ func (lc *LogoutCmd) Parse(args []string) ([]byte, error) {
 	}
 
 	req := &login.LogoutRequest{
-		Token: *lc.token,
-		Uid:   uint32(*lc.uid),
+		Token:  *lc.token,
+		UserID: uint32(*lc.uid),
 	}
 	return protobuf.Marshal(nextSeq(), req)
 }
@@ -144,7 +144,7 @@ func (sc *SendCmd) Parse(args []string) ([]byte, error) {
 		return nil, err
 	}
 
-	req := &chat.C2CSendRequest{
+	req := &chat.C2CMsgR{
 		From: uint32(*sc.from),
 		To:   uint32(*sc.to),
 		Msg:  &chat.Message{Text: *sc.msg},

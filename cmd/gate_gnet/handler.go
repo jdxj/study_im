@@ -3,12 +3,11 @@ package main
 import (
 	"context"
 
-	"github.com/jdxj/study_im/proto/chat"
-
 	"github.com/panjf2000/gnet"
 
 	"github.com/jdxj/study_im/codec/protobuf"
 	"github.com/jdxj/study_im/logger"
+	"github.com/jdxj/study_im/proto/chat"
 	pbGate "github.com/jdxj/study_im/proto/gate"
 	"github.com/jdxj/study_im/proto/head"
 	"github.com/jdxj/study_im/proto/login"
@@ -42,43 +41,55 @@ func (gate *Gate) handleHeartbeat(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]by
 }
 
 func (gate *Gate) handleAuthRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
-	clientID := conn.Context().(int64)
+	connID := conn.Context().(int64)
 	req := rawMsg.Msg.(*login.AuthRequest)
 	req.Identity = &pbGate.Identity{
-		NodeId:   gate.nodeID,
-		ClientId: clientID,
+		NodeId: gate.nodeID,
+		ConnId: connID,
+		Seq:    rawMsg.Seq,
 	}
+
 	resp, err := loginService.Auth(context.Background(), req)
 	if err != nil {
 		return nil, err
 	}
-
+	if resp.Code == login.Status_AuthSuccessful ||
+		resp.Code == login.Status_KickAuthed {
+		gate.cm.AddClient(req.UserID, &Client{
+			connID: connID,
+			userID: req.UserID,
+			conn:   conn,
+		})
+	}
 	return protobuf.Marshal(rawMsg.Seq, resp)
 }
 
 func (gate *Gate) handleLogoutRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
-	clientID := conn.Context().(int64)
+	connID := conn.Context().(int64)
 	req := rawMsg.Msg.(*login.LogoutRequest)
 	req.Identity = &pbGate.Identity{
-		NodeId:   gate.nodeID,
-		ClientId: clientID,
+		NodeId: gate.nodeID,
+		ConnId: connID,
+		Seq:    rawMsg.Seq,
 	}
 
 	resp, err := loginService.Logout(context.Background(), req)
 	if err != nil {
 		return nil, err
 	}
-
+	if resp.Code == login.Status_LogoutSuccess {
+		gate.cm.DelClient(req.UserID)
+	}
 	return protobuf.Marshal(rawMsg.Seq, resp)
 }
 
 func (gate *Gate) handleC2CMsg(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
-	clientID := conn.Context().(int64)
+	connID := conn.Context().(int64)
 	req := rawMsg.Msg.(*chat.C2CMsgR)
 	req.Identity = &pbGate.Identity{
-		NodeId:   gate.nodeID,
-		ClientId: clientID,
-		Seq:      rawMsg.Seq,
+		NodeId: gate.nodeID,
+		ConnId: connID,
+		Seq:    rawMsg.Seq,
 	}
 
 	resp, err := c2cService.C2CMsg(context.Background(), req)
@@ -90,12 +101,12 @@ func (gate *Gate) handleC2CMsg(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte,
 }
 
 func (gate *Gate) handleC2CAck(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
-	clientID := conn.Context().(int64)
+	connID := conn.Context().(int64)
 	req := rawMsg.Msg.(*chat.C2CAckR)
 	req.Identity = &pbGate.Identity{
-		NodeId:   gate.nodeID,
-		ClientId: clientID,
-		Seq:      rawMsg.Seq,
+		NodeId: gate.nodeID,
+		ConnId: connID,
+		Seq:    rawMsg.Seq,
 	}
 
 	resp, err := c2cService.C2CAck(context.Background(), req)

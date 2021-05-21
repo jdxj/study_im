@@ -4,15 +4,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/jdxj/study_im/dao/redis"
-
-	"github.com/jdxj/study_im/proto/chat"
-
 	"github.com/asim/go-micro/v3"
 	"github.com/micro/cli/v2"
 
 	"github.com/jdxj/study_im/config"
+	"github.com/jdxj/study_im/dao/mysql"
+	"github.com/jdxj/study_im/dao/redis"
 	"github.com/jdxj/study_im/logger"
+	"github.com/jdxj/study_im/proto/chat"
 )
 
 const (
@@ -72,5 +71,12 @@ func Init(conf *config.Config) error {
 	rabbitCfg := conf.Rabbit
 	err = InitBroker(
 		rabbitCfg.User, rabbitCfg.Pass, rabbitCfg.Host, "", rabbitCfg.Port)
+	if err != nil {
+		return err
+	}
+
+	mysqlCfg := conf.MySQL
+	err = mysql.Init(
+		mysqlCfg.User, mysqlCfg.Pass, mysqlCfg.Dbname, mysqlCfg.Host, mysqlCfg.Port)
 	return err
 }

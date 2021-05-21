@@ -5,7 +5,7 @@ option go_package = "github.com/jdxj/study_im/proto/gate";
 
 // Identity 标识一个连接到 Gate 上的客户端
 message Identity {
-  uint32 node_id  = 1; // 节点 id
-  int64 client_id = 2; // 该节点上所分配的 id
-  uint32 seq       = 3; // 单聊, msg 序号, 需要保证客户端使用单线程
+  uint32 node_id = 1; // 节点 id
+  int64 conn_id  = 2; // 连接 id
+  uint32 seq     = 3; // 单聊, msg 序号, 需要保证客户端使用单线程
 }

@@ -46,7 +46,7 @@ type Broker struct {
 
 	conn       *amqp.Connection
 	channel    *amqp.Channel
-	bindingKey string // 订阅用
+	bindingKey string // 订阅用, 不订阅的话不用填写
 	queueName  string // 订阅用
 }
 

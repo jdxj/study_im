@@ -3,6 +3,14 @@ package chat;
 
 import "gate/gate.proto";
 
+enum Status {
+  MessageStored = 0;
+  InternalError = 1;
+  NotLoggedIn   = 2;
+  IllegalID     = 3;
+  MsgConfirmed  = 4;
+}
+
 // Content 目前使用最简单的字符串, 以后可以扩展
 message Message {
   string text = 1;
@@ -29,12 +37,15 @@ message C2CMsgR {
 
 // 2. msg:A
 message C2CMsgA {
-  int64 msg_id = 1;
+  Status code  = 1;
+  int64 msg_id = 2;
 }
 
 // 6. ack:N
 message C2CAckN {
-  int64 msg_id = 1;
+  uint32 from  = 1;
+  uint32 to    = 2;
+  int64 msg_id = 3;
 }
 
 // 3. msg:N
@@ -55,7 +66,8 @@ message C2CAckR {
 
 // 5. ack:A
 message C2CAckA {
-  int64 msg_id = 1;
+  Status code  = 1;
+  int64 msg_id = 2;
 }
 
 // 群聊
