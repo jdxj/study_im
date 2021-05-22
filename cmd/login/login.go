@@ -55,7 +55,8 @@ func (ls *LoginService) Auth(ctx context.Context, req *login.AuthRequest, reply 
 	kick := &login.KickOutRequest{
 		Reason: login.Reason_OtherLogin,
 	}
-	err = PublishKickOut(session.NodeID, req.UserID, session.ConnID, kick)
+	err = PublishKickOut(session.NodeID, req.UserID, req.Identity.GateSeq,
+		req.Identity.ClientSeq, session.ConnID, kick)
 	if err != nil {
 		logger.Errorf("PublishKickOut: %s", err)
 	}

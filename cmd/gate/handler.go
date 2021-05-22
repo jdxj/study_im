@@ -44,9 +44,10 @@ func (gate *Gate) handleAuthRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]
 	connID := conn.Context().(int64)
 	req := rawMsg.Msg.(*login.AuthRequest)
 	req.Identity = &pbGate.Identity{
-		NodeId: gate.nodeID,
-		ConnId: connID,
-		Seq:    rawMsg.Seq,
+		NodeId:    gate.nodeID,
+		ConnId:    connID,
+		GateSeq:   gate.nextSeq(),
+		ClientSeq: rawMsg.Seq,
 	}
 
 	resp, err := loginService.Auth(context.Background(), req)
@@ -68,9 +69,10 @@ func (gate *Gate) handleLogoutRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) (
 	connID := conn.Context().(int64)
 	req := rawMsg.Msg.(*login.LogoutRequest)
 	req.Identity = &pbGate.Identity{
-		NodeId: gate.nodeID,
-		ConnId: connID,
-		Seq:    rawMsg.Seq,
+		NodeId:    gate.nodeID,
+		ConnId:    connID,
+		GateSeq:   gate.nextSeq(),
+		ClientSeq: rawMsg.Seq,
 	}
 
 	resp, err := loginService.Logout(context.Background(), req)
@@ -87,9 +89,10 @@ func (gate *Gate) handleC2CMsg(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte,
 	connID := conn.Context().(int64)
 	req := rawMsg.Msg.(*chat.C2CMsgR)
 	req.Identity = &pbGate.Identity{
-		NodeId: gate.nodeID,
-		ConnId: connID,
-		Seq:    rawMsg.Seq,
+		NodeId:    gate.nodeID,
+		ConnId:    connID,
+		GateSeq:   gate.nextSeq(),
+		ClientSeq: rawMsg.Seq,
 	}
 
 	resp, err := c2cService.C2CMsg(context.Background(), req)
@@ -104,9 +107,10 @@ func (gate *Gate) handleC2CAck(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte,
 	connID := conn.Context().(int64)
 	req := rawMsg.Msg.(*chat.C2CAckR)
 	req.Identity = &pbGate.Identity{
-		NodeId: gate.nodeID,
-		ConnId: connID,
-		Seq:    rawMsg.Seq,
+		NodeId:    gate.nodeID,
+		ConnId:    connID,
+		GateSeq:   gate.nextSeq(),
+		ClientSeq: rawMsg.Seq,
 	}
 
 	_, err := c2cService.C2CAck(context.Background(), req)

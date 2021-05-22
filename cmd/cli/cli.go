@@ -12,7 +12,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jdxj/study_im/proto/chat"
+
 	"github.com/jdxj/study_im/codec/protobuf"
+	"github.com/jdxj/study_im/proto/login"
 )
 
 func NewCli() *Cli {
@@ -41,9 +44,6 @@ type Cli struct {
 
 	ackQMutex sync.RWMutex
 	ackQ      map[uint32]struct{}
-
-	token  string
-	userID uint32
 }
 
 func (cli *Cli) ReadLoop() {
@@ -68,9 +68,22 @@ func (cli *Cli) ReadLoop() {
 
 func (cli *Cli) handle(rawMsg *protobuf.RawMsg) {
 	cli.ackMsg(rawMsg.Ack)
+	log.Printf("%s\n", rawMsg)
 
-	// todo: 处理各种状态
-	log.Printf("%s\n\n", rawMsg)
+	switch v := rawMsg.Msg.(type) {
+	case *login.AuthResponse:
+		cli.handleAuthResponse(v)
+	case *login.LogoutResponse:
+		cli.handleLogoutResponse(v)
+	case *login.KickOutRequest:
+		cli.handleKickOutRequest(v)
+	case *chat.C2CMsgA:
+		cli.handleC2CMsgA(v)
+	case *chat.C2CMsgN:
+		cli.handleC2CMsgN(v)
+	default:
+		log.Printf("not handle: %v", v)
+	}
 }
 
 func (cli *Cli) ackMsg(ack uint32) {
@@ -130,9 +143,9 @@ func (cli *Cli) SendMessage() {
 func (cli *Cli) write() {
 	for {
 		content := <-cli.sendQ
-		seq++
+		cli.seq++
 
-		data, err := protobuf.Marshal(seq, 0, content)
+		data, err := protobuf.Marshal(cli.seq, 0, content)
 		if err != nil {
 			log.Printf("Marshal: %s\n", err)
 			continue
@@ -140,7 +153,7 @@ func (cli *Cli) write() {
 
 		// 注意: 必须先添加到 ackQ, 再发送消息
 		cli.ackQMutex.Lock()
-		cli.ackQ[seq] = struct{}{}
+		cli.ackQ[cli.seq] = struct{}{}
 		cli.ackQMutex.Unlock()
 
 		frame := GenerateFrame(data)
@@ -150,7 +163,7 @@ func (cli *Cli) write() {
 
 			// 撤回 ack
 			cli.ackQMutex.Lock()
-			delete(cli.ackQ, seq)
+			delete(cli.ackQ, cli.seq)
 			cli.ackQMutex.Unlock()
 			continue
 		}
@@ -160,10 +173,10 @@ func (cli *Cli) write() {
 		select {
 		case <-cli.sendSign:
 		case <-timer.C:
-			log.Printf("timeout, seq: %d, msg: %s\n", seq, content)
+			log.Printf("timeout, seq: %d, msg: %s\n", cli.seq, content)
 			// 撤回 ack
 			cli.ackQMutex.Lock()
-			delete(cli.ackQ, seq)
+			delete(cli.ackQ, cli.seq)
 			cli.ackQMutex.Unlock()
 		}
 		timer.Stop()

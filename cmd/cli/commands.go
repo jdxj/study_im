@@ -26,14 +26,11 @@ var (
 
 	commands = make(map[string]Parser)
 
-	seq uint32
+	// status
+	token     string
+	userID    uint32
+	lastMsgID = make(map[uint32]int64)
 )
-
-func nextSeq() uint32 {
-	s := seq
-	seq++
-	return s
-}
 
 func init() {
 	commands[List] = NewListCmd()
@@ -73,6 +70,8 @@ func (ac *AuthCmd) Parse(args []string) (interface{}, error) {
 		Token:  *ac.token,
 		UserID: uint32(*ac.uid),
 	}
+	token = *ac.token
+	userID = uint32(*ac.uid)
 	return req, nil
 }
 
@@ -97,8 +96,8 @@ func (lc *LogoutCmd) Parse(args []string) (interface{}, error) {
 	}
 
 	req := &login.LogoutRequest{
-		Token:  *lc.token,
-		UserID: uint32(*lc.uid),
+		Token:  token,
+		UserID: userID,
 	}
 	return req, nil
 }

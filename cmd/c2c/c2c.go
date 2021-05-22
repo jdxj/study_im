@@ -16,6 +16,7 @@ type C2CService struct {
 
 func (c2c *C2CService) C2CMsg(ctx context.Context, req *chat.C2CMsgR, reply *chat.C2CMsgA) error {
 	reply.Code = chat.Status_MessageStored
+	reply.To = req.To
 
 	sessionFrom := redis.Session{UserID: req.From}
 	err := sessionFrom.Get()
@@ -41,7 +42,7 @@ func (c2c *C2CService) C2CMsg(ctx context.Context, req *chat.C2CMsgR, reply *cha
 		ms := &mysql.MessageSend{
 			FromID:   req.From,
 			ToID:     req.To,
-			Seq:      req.Identity.Seq,
+			Seq:      req.Identity.ClientSeq,
 			Content:  content,
 			SendTime: time.Now(),
 			SendType: 1,
@@ -81,7 +82,8 @@ func (c2c *C2CService) C2CMsg(ctx context.Context, req *chat.C2CMsgR, reply *cha
 		Msg:   req.Msg,
 		MsgId: msgID,
 	}
-	err = Publish(session.NodeID, req.Identity.Seq, session.UserID, msgN)
+	err = Publish(session.NodeID, req.Identity.GateSeq,
+		req.Identity.ClientSeq, session.UserID, msgN)
 	if err != nil {
 		logger.Errorf("Publish: %s", err)
 	}
