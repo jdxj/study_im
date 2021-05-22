@@ -109,10 +109,6 @@ func (gate *Gate) handleC2CAck(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte,
 		Seq:    rawMsg.Seq,
 	}
 
-	resp, err := c2cService.C2CAck(context.Background(), req)
-	if err != nil {
-		return nil, err
-	}
-
-	return protobuf.Marshal(rawMsg.Seq, resp)
+	_, err := c2cService.C2CAck(context.Background(), req)
+	return nil, err
 }

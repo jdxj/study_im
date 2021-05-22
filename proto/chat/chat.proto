@@ -1,5 +1,6 @@
 syntax = "proto3";
 package chat;
+option go_package = "../chat";
 
 import "gate/gate.proto";
 
@@ -18,13 +19,23 @@ message Message {
 
 // 单对单消息
 
+// Options 表示不向客户端响应
+message Options {}
+
 service C2C {
   rpc C2CMsg (C2CMsgR) returns (C2CMsgA) {}
-  rpc C2CAck (C2CAckR) returns (C2CAckA) {}
+  rpc C2CAck (C2CAckR) returns (Options) {}
 }
 
 // 保证消息投递有6步: http://www.52im.net/thread-294-1-1.html
+// 如果使用6步的话, 客户端的状态难以实现 (我的水平不足), 所以使用4步:
+// 1. clientA -msg:R-> server
+// 2. clientA <-msg:A- server
+// 3.                  server -msg:N-> clientB
+// 4.                  server <-ack:R- clientB
 
+
+// 6步协议, 只使用4个:
 // 1. msg:R
 message C2CMsgR {
   gate.Identity identity = 1;
