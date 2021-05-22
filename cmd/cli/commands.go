@@ -6,7 +6,6 @@ import (
 
 	"github.com/jdxj/study_im/proto/chat"
 
-	"github.com/jdxj/study_im/codec/protobuf"
 	"github.com/jdxj/study_im/proto/login"
 )
 
@@ -44,7 +43,7 @@ func init() {
 }
 
 type Parser interface {
-	Parse([]string) ([]byte, error)
+	Parse([]string) (interface{}, error)
 }
 
 func NewAuthCmd() *AuthCmd {
@@ -64,7 +63,7 @@ type AuthCmd struct {
 	uid   *uint
 }
 
-func (ac *AuthCmd) Parse(args []string) ([]byte, error) {
+func (ac *AuthCmd) Parse(args []string) (interface{}, error) {
 	err := ac.fs.Parse(args)
 	if err != nil {
 		return nil, err
@@ -74,8 +73,7 @@ func (ac *AuthCmd) Parse(args []string) ([]byte, error) {
 		Token:  *ac.token,
 		UserID: uint32(*ac.uid),
 	}
-
-	return protobuf.Marshal(nextSeq(), 0, req)
+	return req, nil
 }
 
 func NewLogoutCmd() *LogoutCmd {
@@ -92,7 +90,7 @@ type LogoutCmd struct {
 	uid   *uint
 }
 
-func (lc *LogoutCmd) Parse(args []string) ([]byte, error) {
+func (lc *LogoutCmd) Parse(args []string) (interface{}, error) {
 	err := lc.fs.Parse(args)
 	if err != nil {
 		return nil, err
@@ -102,7 +100,7 @@ func (lc *LogoutCmd) Parse(args []string) ([]byte, error) {
 		Token:  *lc.token,
 		UserID: uint32(*lc.uid),
 	}
-	return protobuf.Marshal(nextSeq(), 0, req)
+	return req, nil
 }
 
 func NewListCmd() *ListCmd {
@@ -112,7 +110,7 @@ func NewListCmd() *ListCmd {
 type ListCmd struct {
 }
 
-func (lc *ListCmd) Parse(args []string) ([]byte, error) {
+func (lc *ListCmd) Parse(args []string) (interface{}, error) {
 	for _, cmd := range cmdList {
 		fmt.Printf("- %s\n", cmd)
 	}
@@ -138,7 +136,7 @@ type SendCmd struct {
 	msg  *string
 }
 
-func (sc *SendCmd) Parse(args []string) ([]byte, error) {
+func (sc *SendCmd) Parse(args []string) (interface{}, error) {
 	err := sc.fs.Parse(args)
 	if err != nil {
 		return nil, err
@@ -149,5 +147,5 @@ func (sc *SendCmd) Parse(args []string) ([]byte, error) {
 		To:   uint32(*sc.to),
 		Msg:  &chat.Message{Text: *sc.msg},
 	}
-	return protobuf.Marshal(nextSeq(), 0, req)
+	return req, nil
 }

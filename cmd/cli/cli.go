@@ -9,6 +9,8 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/jdxj/study_im/codec/protobuf"
 )
@@ -21,11 +23,27 @@ func NewCli() *Cli {
 		log.Fatalln(err)
 	}
 
-	return &Cli{conn: conn}
+	return &Cli{
+		conn:     conn,
+		sendQ:    make(chan interface{}, 1000),
+		sendSign: make(chan struct{}),
+		ackQ:     make(map[uint32]struct{}),
+	}
 }
 
 type Cli struct {
 	conn net.Conn
+
+	sendQ chan interface{}
+
+	seq      uint32
+	sendSign chan struct{}
+
+	ackQMutex sync.RWMutex
+	ackQ      map[uint32]struct{}
+
+	token  string
+	userID uint32
 }
 
 func (cli *Cli) ReadLoop() {
@@ -44,11 +62,34 @@ func (cli *Cli) ReadLoop() {
 			log.Printf("%s\n", err)
 			continue
 		}
-		log.Printf("%s\n\n", rawMsg)
+		cli.handle(rawMsg)
 	}
 }
 
-func (cli *Cli) WriteLoop() {
+func (cli *Cli) handle(rawMsg *protobuf.RawMsg) {
+	cli.ackMsg(rawMsg.Ack)
+
+	// todo: 处理各种状态
+	log.Printf("%s\n\n", rawMsg)
+}
+
+func (cli *Cli) ackMsg(ack uint32) {
+	cli.ackQMutex.Lock()
+	_, ok := cli.ackQ[ack]
+	if ok {
+		log.Printf("ack: %d\n", ack)
+		delete(cli.ackQ, ack)
+		select {
+		case cli.sendSign <- struct{}{}:
+		default: // 避免阻塞
+		}
+	}
+	cli.ackQMutex.Unlock()
+}
+
+func (cli *Cli) SendMessage() {
+	go cli.write()
+
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		// \n: LF 10
@@ -78,12 +119,54 @@ func (cli *Cli) WriteLoop() {
 			continue
 		}
 
+		select {
+		case cli.sendQ <- data:
+		default:
+			log.Printf("队列已满, 稍后再试\n")
+		}
+	}
+}
+
+func (cli *Cli) write() {
+	for {
+		content := <-cli.sendQ
+		seq++
+
+		data, err := protobuf.Marshal(seq, 0, content)
+		if err != nil {
+			log.Printf("Marshal: %s\n", err)
+			continue
+		}
+
+		// 注意: 必须先添加到 ackQ, 再发送消息
+		cli.ackQMutex.Lock()
+		cli.ackQ[seq] = struct{}{}
+		cli.ackQMutex.Unlock()
+
 		frame := GenerateFrame(data)
 		_, err = cli.conn.Write(frame)
 		if err != nil {
-			log.Printf("%s\n", err)
+			log.Printf("Write: %s\n", err)
+
+			// 撤回 ack
+			cli.ackQMutex.Lock()
+			delete(cli.ackQ, seq)
+			cli.ackQMutex.Unlock()
 			continue
 		}
+
+		// 等超时, 为了简化逻辑, 重发动作交给用户
+		timer := time.NewTimer(3 * time.Second)
+		select {
+		case <-cli.sendSign:
+		case <-timer.C:
+			log.Printf("timeout, seq: %d, msg: %s\n", seq, content)
+			// 撤回 ack
+			cli.ackQMutex.Lock()
+			delete(cli.ackQ, seq)
+			cli.ackQMutex.Unlock()
+		}
+		timer.Stop()
 	}
 }
 
