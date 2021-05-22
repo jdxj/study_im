@@ -24,6 +24,7 @@ var (
 //	version   uint32
 //	cmd       uint32
 //	seq       uint32
+//  ack       uint32
 //	timestamp uint32
 //	bodyLen   uint32
 //	body      []byte
@@ -37,13 +38,14 @@ type RawMsg struct {
 	Version   uint32
 	Cmd       uint32
 	Seq       uint32
+	Ack       uint32
 	Timestamp uint32
 	Msg       interface{}
 }
 
 func (rawMsg *RawMsg) String() string {
-	return fmt.Sprintf("version:%d cmd:%d seq:%d timestamp:%d msg:{%s}",
-		rawMsg.Version, rawMsg.Cmd, rawMsg.Seq, rawMsg.Timestamp, rawMsg.Msg)
+	return fmt.Sprintf("version:%d cmd:%d seq:%d ack:%d timestamp:%d msg:{%s}",
+		rawMsg.Version, rawMsg.Cmd, rawMsg.Seq, rawMsg.Ack, rawMsg.Timestamp, rawMsg.Msg)
 }
 
 func NewProcessor() *Processor {
@@ -86,7 +88,7 @@ func (p *Processor) Register(id uint32, msg proto.Message) {
 }
 
 func (p *Processor) Unmarshal(data []byte) (*RawMsg, error) {
-	if len(data) < 20 {
+	if len(data) < 24 {
 		return nil, ErrProtobufDataTooShort
 	}
 
@@ -94,8 +96,9 @@ func (p *Processor) Unmarshal(data []byte) (*RawMsg, error) {
 	version := byteOrder.Uint32(data[0:4])
 	cmd := byteOrder.Uint32(data[4:8])
 	seq := byteOrder.Uint32(data[8:12])
-	timestamp := byteOrder.Uint32(data[12:16])
-	bodyLen := byteOrder.Uint32(data[16:20])
+	ack := byteOrder.Uint32(data[12:16])
+	timestamp := byteOrder.Uint32(data[16:20])
+	bodyLen := byteOrder.Uint32(data[20:24])
 
 	if version != CurVersion {
 		return nil, ErrIncompatibleVersion
@@ -106,12 +109,12 @@ func (p *Processor) Unmarshal(data []byte) (*RawMsg, error) {
 		return nil, fmt.Errorf("message id %d not registered", cmd)
 	}
 
-	if len(data[20:]) != int(bodyLen) {
+	if len(data[24:]) != int(bodyLen) {
 		return nil, fmt.Errorf("invalid message length")
 	}
 
 	msg := reflect.New(msgType.Elem()).Interface()
-	err := proto.Unmarshal(data[20:], msg.(proto.Message))
+	err := proto.Unmarshal(data[24:], msg.(proto.Message))
 	if err != nil {
 		return nil, err
 	}
@@ -120,13 +123,14 @@ func (p *Processor) Unmarshal(data []byte) (*RawMsg, error) {
 		Version:   version,
 		Cmd:       cmd,
 		Seq:       seq,
+		Ack:       ack,
 		Timestamp: timestamp,
 		Msg:       msg,
 	}
 	return rawMsg, nil
 }
 
-func (p *Processor) Marshal(seq uint32, msg interface{}) ([]byte, error) {
+func (p *Processor) Marshal(seq, ack uint32, msg interface{}) ([]byte, error) {
 	msgType := reflect.TypeOf(msg)
 	cmd, ok := p.msgID[msgType]
 	if !ok {
@@ -141,13 +145,14 @@ func (p *Processor) Marshal(seq uint32, msg interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	fieldBuf := make([]byte, 20)
+	fieldBuf := make([]byte, 24)
 	byteOrder := p.byteOrder
 	byteOrder.PutUint32(fieldBuf[0:4], CurVersion)
 	byteOrder.PutUint32(fieldBuf[4:8], cmd)
 	byteOrder.PutUint32(fieldBuf[8:12], seq)
-	byteOrder.PutUint32(fieldBuf[12:16], uint32(time.Now().Unix()))
-	byteOrder.PutUint32(fieldBuf[16:20], uint32(len(content)))
+	byteOrder.PutUint32(fieldBuf[12:16], ack)
+	byteOrder.PutUint32(fieldBuf[16:20], uint32(time.Now().Unix()))
+	byteOrder.PutUint32(fieldBuf[20:24], uint32(len(content)))
 
 	_, err1 := buffer.Write(fieldBuf)
 	_, err2 := buffer.Write(content)

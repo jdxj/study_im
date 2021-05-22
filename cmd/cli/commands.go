@@ -75,7 +75,7 @@ func (ac *AuthCmd) Parse(args []string) ([]byte, error) {
 		UserID: uint32(*ac.uid),
 	}
 
-	return protobuf.Marshal(nextSeq(), req)
+	return protobuf.Marshal(nextSeq(), 0, req)
 }
 
 func NewLogoutCmd() *LogoutCmd {
@@ -102,7 +102,7 @@ func (lc *LogoutCmd) Parse(args []string) ([]byte, error) {
 		Token:  *lc.token,
 		UserID: uint32(*lc.uid),
 	}
-	return protobuf.Marshal(nextSeq(), req)
+	return protobuf.Marshal(nextSeq(), 0, req)
 }
 
 func NewListCmd() *ListCmd {
@@ -149,5 +149,5 @@ func (sc *SendCmd) Parse(args []string) ([]byte, error) {
 		To:   uint32(*sc.to),
 		Msg:  &chat.Message{Text: *sc.msg},
 	}
-	return protobuf.Marshal(nextSeq(), req)
+	return protobuf.Marshal(nextSeq(), 0, req)
 }

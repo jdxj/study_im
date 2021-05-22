@@ -24,7 +24,7 @@ func PublishKickOut(nodeID, userID uint32, connID int64, msg interface{}) error 
 	headers["connID"] = connID
 	headers["action"] = "kick"
 
-	data, err := protobuf.Marshal(math.MaxUint32, msg)
+	data, err := protobuf.Marshal(math.MaxUint32, 0, msg)
 	if err != nil {
 		return err
 	}

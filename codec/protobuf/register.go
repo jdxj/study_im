@@ -16,8 +16,8 @@ func init() {
 	registerMsg(p)
 }
 
-func Marshal(seq uint32, msg interface{}) ([]byte, error) {
-	return p.Marshal(seq, msg)
+func Marshal(seq, ack uint32, msg interface{}) ([]byte, error) {
+	return p.Marshal(seq, ack, msg)
 }
 
 func Unmarshal(data []byte) (*RawMsg, error) {

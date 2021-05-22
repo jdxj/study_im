@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/panjf2000/gnet"
@@ -40,6 +41,9 @@ type Gate struct {
 
 	nodeID      uint32
 	idGenerator *snowflake.Node
+
+	seqMutex sync.Mutex
+	seq      uint32
 
 	// todo: 心跳
 	cm *ClientManager
@@ -82,4 +86,12 @@ func (gate *Gate) OnClosed(conn gnet.Conn, err error) (action gnet.Action) {
 
 func (gate *Gate) nextConnID() int64 {
 	return gate.idGenerator.Generate().Int64()
+}
+
+func (gate *Gate) nextSeq() uint32 {
+	gate.seqMutex.Lock()
+	curSeq := gate.seq
+	gate.seq++
+	gate.seqMutex.Unlock()
+	return curSeq
 }

@@ -37,7 +37,7 @@ func (gate *Gate) handle(conn gnet.Conn, rawMsg *protobuf.RawMsg) []byte {
 
 func (gate *Gate) handleHeartbeat(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
 	logger.Debugf("%v", *rawMsg)
-	return protobuf.Marshal(rawMsg.Seq, &head.Heartbeat{})
+	return protobuf.Marshal(gate.nextSeq(), rawMsg.Seq, &head.Heartbeat{})
 }
 
 func (gate *Gate) handleAuthRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
@@ -61,7 +61,7 @@ func (gate *Gate) handleAuthRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]
 			conn:   conn,
 		})
 	}
-	return protobuf.Marshal(rawMsg.Seq, resp)
+	return protobuf.Marshal(gate.nextSeq(), rawMsg.Seq, resp)
 }
 
 func (gate *Gate) handleLogoutRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
@@ -80,7 +80,7 @@ func (gate *Gate) handleLogoutRequest(conn gnet.Conn, rawMsg *protobuf.RawMsg) (
 	if resp.Code == login.Status_LogoutSuccess {
 		gate.cm.DelClient(req.UserID)
 	}
-	return protobuf.Marshal(rawMsg.Seq, resp)
+	return protobuf.Marshal(gate.nextSeq(), rawMsg.Seq, resp)
 }
 
 func (gate *Gate) handleC2CMsg(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
@@ -97,7 +97,7 @@ func (gate *Gate) handleC2CMsg(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte,
 		return nil, err
 	}
 
-	return protobuf.Marshal(rawMsg.Seq, resp)
+	return protobuf.Marshal(gate.nextSeq(), rawMsg.Seq, resp)
 }
 
 func (gate *Gate) handleC2CAck(conn gnet.Conn, rawMsg *protobuf.RawMsg) ([]byte, error) {
