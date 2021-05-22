@@ -10,3 +10,29 @@ logger:
 gate:
   host: "0.0.0.0"
   port: 9000
+  node: 1
+web:
+  host: ""
+  port: 0
+  mode: ""
+mysql:
+  user: ""
+  pass: ""
+  dbname: ""
+  host: ""
+  port: 0
+mongo:
+  user: ""
+  pass: ""
+  dbname: ""
+  host: ""
+  port: 0
+redis:
+  pass: ""
+  host: "127.0.0.1"
+  port: 6379
+rabbit:
+  user: "guest"
+  pass: "guest"
+  host: "127.0.0.1"
+  port: 5672
