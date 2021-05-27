@@ -2,50 +2,96 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
-	"github.com/name5566/leaf/network"
+	"github.com/bwmarrin/snowflake"
+	"github.com/panjf2000/gnet"
+
+	"github.com/jdxj/study_im/codec/frame"
+	"github.com/jdxj/study_im/codec/protobuf"
+	"github.com/jdxj/study_im/logger"
 )
 
-func NewGate(host string, port int) *Gate {
-	addr := fmt.Sprintf("%s:%d", host, port)
+func NewGate(host string, port, nodeID int) (*Gate, error) {
 	gate := &Gate{
-		Processor:    registerMsg(),
-		TCPAddr:      addr,
-		LenMsgLen:    4,
-		LittleEndian: false,
+		host:   host,
+		port:   port,
+		nodeID: uint32(nodeID),
 	}
-	return gate
+
+	gate.cm = &ClientManager{
+		clients: make(map[uint32]*Client, 100000),
+	}
+	//gate.gm = &GroupManager{
+	//	groups: make(map[uint32]*Group, 1000),
+	//}
+	gate.rm = &RelationManager{
+		connections: make(map[int64]gnet.Conn),
+	}
+
+	var err error
+	gate.idGenerator, err = snowflake.NewNode(int64(nodeID))
+	return gate, err
 }
 
 type Gate struct {
-	MaxConnNum      int
-	PendingWriteNum int
-	MaxMsgLen       uint32
-	Processor       network.Processor
+	*gnet.EventServer
+	host string
+	port int
 
-	// tcp
-	TCPAddr      string
-	tcpServer    *network.TCPServer
-	LenMsgLen    int
-	LittleEndian bool
+	nodeID      uint32
+	idGenerator *snowflake.Node
+
+	seqMutex sync.Mutex
+	seq      uint32
+
+	// todo: 心跳
+	cm *ClientManager
+	//gm *GroupManager
+	rm *RelationManager
 }
 
-func (gate *Gate) Run() {
-	tcpServer := new(network.TCPServer)
-	tcpServer.Addr = gate.TCPAddr
-	tcpServer.MaxConnNum = gate.MaxConnNum
-	tcpServer.PendingWriteNum = gate.PendingWriteNum
-	tcpServer.LenMsgLen = gate.LenMsgLen
-	tcpServer.MaxMsgLen = gate.MaxMsgLen
-	tcpServer.LittleEndian = gate.LittleEndian
-	tcpServer.NewAgent = func(conn *network.TCPConn) network.Agent {
-		a := &agent{conn: conn, gate: gate}
-		return a
+func (gate *Gate) Serve() error {
+	logger.Infof("server started")
+	addr := fmt.Sprintf("%s:%d", gate.host, gate.port)
+	return gnet.Serve(gate, addr,
+		gnet.WithMulticore(true),
+		gnet.WithCodec(frame.NewLengthFieldBasedFrameCodec()),
+	)
+}
+
+func (gate *Gate) React(frame []byte, conn gnet.Conn) (out []byte, action gnet.Action) {
+	rawMsg, err := protobuf.Unmarshal(frame)
+	if err != nil {
+		logger.Errorf("Unmarshal: %s", err)
+		return nil, 0
 	}
-	gate.tcpServer = tcpServer
-	tcpServer.Start()
+
+	out = gate.handle(conn, rawMsg)
+	return
 }
 
-func (gate *Gate) Stop() {
-	gate.tcpServer.Close()
+func (gate *Gate) OnOpened(c gnet.Conn) (out []byte, action gnet.Action) {
+	connID := gate.nextConnID()
+	c.SetContext(connID)
+	gate.rm.AddConn(connID, c)
+	return
+}
+
+func (gate *Gate) OnClosed(conn gnet.Conn, err error) (action gnet.Action) {
+	connID := conn.Context().(int64)
+	gate.rm.DelConn(connID)
+	return
+}
+
+func (gate *Gate) nextConnID() int64 {
+	return gate.idGenerator.Generate().Int64()
+}
+
+func (gate *Gate) nextSeq() uint32 {
+	gate.seqMutex.Lock()
+	curSeq := gate.seq
+	gate.seq++
+	gate.seqMutex.Unlock()
+	return curSeq
 }

@@ -16,6 +16,7 @@ type C2CService struct {
 
 func (c2c *C2CService) C2CMsg(ctx context.Context, req *chat.C2CMsgR, reply *chat.C2CMsgA) error {
 	reply.Code = chat.Status_MessageStored
+	reply.To = req.To
 
 	sessionFrom := redis.Session{UserID: req.From}
 	err := sessionFrom.Get()
@@ -41,7 +42,7 @@ func (c2c *C2CService) C2CMsg(ctx context.Context, req *chat.C2CMsgR, reply *cha
 		ms := &mysql.MessageSend{
 			FromID:   req.From,
 			ToID:     req.To,
-			Seq:      req.Identity.Seq,
+			Seq:      req.Identity.ClientSeq,
 			Content:  content,
 			SendTime: time.Now(),
 			SendType: 1,
@@ -73,18 +74,6 @@ func (c2c *C2CService) C2CMsg(ctx context.Context, req *chat.C2CMsgR, reply *cha
 		if err != nil {
 			logger.Errorf("session.Get: %s", err)
 		}
-
-		// 发送伪 ackN
-		ackN := &chat.C2CAckN{
-			From:  req.From,
-			To:    req.To,
-			MsgId: msgID,
-		}
-		identity := req.Identity
-		err = Publish(identity.NodeId, identity.Seq, req.From, ackN)
-		if err != nil {
-			logger.Errorf("Publish: %s", err)
-		}
 		return nil
 	}
 
@@ -93,30 +82,26 @@ func (c2c *C2CService) C2CMsg(ctx context.Context, req *chat.C2CMsgR, reply *cha
 		Msg:   req.Msg,
 		MsgId: msgID,
 	}
-	err = Publish(session.NodeID, req.Identity.Seq, session.UserID, msgN)
+	err = Publish(session.NodeID, req.Identity.GateSeq,
+		req.Identity.ClientSeq, session.UserID, msgN)
 	if err != nil {
 		logger.Errorf("Publish: %s", err)
 	}
 	return nil
 }
 
-func (c2c *C2CService) C2CAck(ctx context.Context, req *chat.C2CAckR, reply *chat.C2CAckA) error {
-	reply.Code = chat.Status_MsgConfirmed
-
+func (c2c *C2CService) C2CAck(ctx context.Context, req *chat.C2CAckR, reply *chat.Options) error {
 	sessionTo := redis.Session{UserID: req.To}
 	err := sessionTo.Get()
 	if err != nil {
 		logger.Errorf("Get: %s", err)
-		reply.Code = chat.Status_InternalError
 		return nil
 	}
 	if sessionTo.NodeID == 0 {
-		reply.Code = chat.Status_NotLoggedIn
 		return nil
 	}
 	if sessionTo.NodeID != req.Identity.NodeId ||
 		sessionTo.ConnID != req.Identity.ConnId {
-		reply.Code = chat.Status_IllegalID
 		return nil
 	}
 
@@ -127,28 +112,7 @@ func (c2c *C2CService) C2CAck(ctx context.Context, req *chat.C2CAckR, reply *cha
 	err = mr.SetRead()
 	if err != nil {
 		logger.Errorf("mr.SetRead(): %s", err)
-		reply.Code = chat.Status_InternalError
 		return nil
-	}
-	reply.MsgId = req.MsgId
-
-	session := &redis.Session{UserID: req.From}
-	err = session.Get()
-	if err != nil || session.NodeID == 0 { // 发送方不在线就无所谓了
-		if err != nil {
-			logger.Errorf("session.Get: %s", err)
-		}
-		return nil
-	}
-
-	ackN := &chat.C2CAckN{
-		From:  req.From,
-		To:    req.To,
-		MsgId: req.MsgId,
-	}
-	err = Publish(session.NodeID, req.Identity.Seq, req.From, ackN)
-	if err != nil {
-		logger.Errorf("Publish: %s", err)
 	}
 	return nil
 }

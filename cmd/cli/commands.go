@@ -6,7 +6,6 @@ import (
 
 	"github.com/jdxj/study_im/proto/chat"
 
-	"github.com/jdxj/study_im/codec/protobuf"
 	"github.com/jdxj/study_im/proto/login"
 )
 
@@ -27,14 +26,11 @@ var (
 
 	commands = make(map[string]Parser)
 
-	seq uint32
+	// status
+	token     string
+	userID    uint32
+	lastMsgID = make(map[uint32]int64)
 )
-
-func nextSeq() uint32 {
-	s := seq
-	seq++
-	return s
-}
 
 func init() {
 	commands[List] = NewListCmd()
@@ -44,7 +40,7 @@ func init() {
 }
 
 type Parser interface {
-	Parse([]string) ([]byte, error)
+	Parse([]string) (interface{}, error)
 }
 
 func NewAuthCmd() *AuthCmd {
@@ -64,7 +60,7 @@ type AuthCmd struct {
 	uid   *uint
 }
 
-func (ac *AuthCmd) Parse(args []string) ([]byte, error) {
+func (ac *AuthCmd) Parse(args []string) (interface{}, error) {
 	err := ac.fs.Parse(args)
 	if err != nil {
 		return nil, err
@@ -74,8 +70,9 @@ func (ac *AuthCmd) Parse(args []string) ([]byte, error) {
 		Token:  *ac.token,
 		UserID: uint32(*ac.uid),
 	}
-
-	return protobuf.Marshal(nextSeq(), req)
+	token = *ac.token
+	userID = uint32(*ac.uid)
+	return req, nil
 }
 
 func NewLogoutCmd() *LogoutCmd {
@@ -92,17 +89,17 @@ type LogoutCmd struct {
 	uid   *uint
 }
 
-func (lc *LogoutCmd) Parse(args []string) ([]byte, error) {
+func (lc *LogoutCmd) Parse(args []string) (interface{}, error) {
 	err := lc.fs.Parse(args)
 	if err != nil {
 		return nil, err
 	}
 
 	req := &login.LogoutRequest{
-		Token:  *lc.token,
-		UserID: uint32(*lc.uid),
+		Token:  token,
+		UserID: userID,
 	}
-	return protobuf.Marshal(nextSeq(), req)
+	return req, nil
 }
 
 func NewListCmd() *ListCmd {
@@ -112,7 +109,7 @@ func NewListCmd() *ListCmd {
 type ListCmd struct {
 }
 
-func (lc *ListCmd) Parse(args []string) ([]byte, error) {
+func (lc *ListCmd) Parse(args []string) (interface{}, error) {
 	for _, cmd := range cmdList {
 		fmt.Printf("- %s\n", cmd)
 	}
@@ -138,7 +135,7 @@ type SendCmd struct {
 	msg  *string
 }
 
-func (sc *SendCmd) Parse(args []string) ([]byte, error) {
+func (sc *SendCmd) Parse(args []string) (interface{}, error) {
 	err := sc.fs.Parse(args)
 	if err != nil {
 		return nil, err
@@ -149,5 +146,5 @@ func (sc *SendCmd) Parse(args []string) ([]byte, error) {
 		To:   uint32(*sc.to),
 		Msg:  &chat.Message{Text: *sc.msg},
 	}
-	return protobuf.Marshal(nextSeq(), req)
+	return req, nil
 }

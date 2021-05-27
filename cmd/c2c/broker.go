@@ -16,13 +16,13 @@ func InitBroker(user, pass, host, bindingKey string, port int) error {
 	return broker.Connect()
 }
 
-func Publish(nodeID, seq, userID uint32, msg interface{}) error {
+func Publish(nodeID, seq, ack, userID uint32, msg interface{}) error {
 	headers := make(map[string]interface{})
 	headers["nodeID"] = int64(nodeID) // rabbitmq driver 提示不支持 uint32
 	headers["userID"] = int64(userID)
 	headers["action"] = "c2c"
 
-	data, err := protobuf.Marshal(seq, msg)
+	data, err := protobuf.Marshal(seq, ack, msg)
 	if err != nil {
 		return err
 	}

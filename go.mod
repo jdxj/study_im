@@ -10,12 +10,10 @@ require (
 	github.com/go-redis/redis/v8 v8.8.2
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.5.2
-	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/micro/cli/v2 v2.1.2
-	github.com/name5566/leaf v0.0.0-20200516012428-8592b1abbbbe
 	github.com/panjf2000/gnet v1.4.3
 	github.com/streadway/amqp v1.0.0
 	github.com/ugorji/go v1.2.6 // indirect
