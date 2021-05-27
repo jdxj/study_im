@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/jdxj/study_im/cmd/web/api"
+	v1 "github.com/jdxj/study_im/cmd/web/api/v1"
 	"github.com/jdxj/study_im/config"
 	"github.com/jdxj/study_im/logger"
 )
@@ -24,6 +26,11 @@ func main() {
 	)
 
 	webCfg := conf.Web
+	err = initTemp(webCfg.Temp)
+	if err != nil {
+		log.Fatalf("initTemp: %s", err)
+	}
+
 	gin.SetMode(webCfg.Mode)
 	engine := api.NewServer()
 
@@ -32,4 +39,9 @@ func main() {
 	if err != nil {
 		logger.Errorf("Run: %s", err)
 	}
+}
+
+func initTemp(path string) error {
+	v1.Temp = path
+	return os.MkdirAll(path, os.ModePerm)
 }

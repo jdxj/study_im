@@ -9,6 +9,8 @@ import (
 func Handlers() []func() (string, string, func(ctx *gin.Context)) {
 	return []func() (string, string, func(ctx *gin.Context)){
 		ping,
+		objectsPOST,
+		objectsGET,
 	}
 }
 
@@ -22,13 +24,4 @@ func ping() (string, string, func(*gin.Context)) {
 		})
 	}
 	return method, path, handler
-}
-
-func userPost() (string, string, func(*gin.Context)) {
-	method := http.MethodPost
-	path := "/user"
-
-	handler := func(ctx *gin.Context) {
-
-	}
 }
